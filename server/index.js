@@ -2,6 +2,8 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 
 dotenv.config();
 
@@ -18,12 +20,38 @@ if (!fs.existsSync(uploadDir)) {
     console.log('Created uploads directory');
 }
 
-// Middleware
+// Security Middleware
+app.use(helmet()); // Secure HTTP headers
+
+// Rate Limiting
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // Limit each IP to 100 requests per windowMs
+    message: 'Trop de requêtes, veuillez réessayer plus tard.'
+});
+app.use(limiter);
+
+// CORS Configuration
+const allowedOrigins = [
+    'http://localhost:5173', // Local development
+    process.env.FRONTEND_URL // Production URL
+].filter(Boolean);
+
 app.use(cors({
-    origin: '*', // Allow all origins
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.indexOf(origin) === -1) {
+            const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+            return callback(new Error(msg), false);
+        }
+        return callback(null, true);
+    },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'x-auth-token']
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-auth-token'],
+    credentials: true
 }));
+
 app.use(express.json());
 
 // Request Logging Middleware
@@ -32,7 +60,6 @@ app.use((req, res, next) => {
     next();
 });
 
-// Database Connection
 // Database Connection
 const connectDB = async () => {
     try {
@@ -62,14 +89,20 @@ app.use('/api/profile', require('./routes/profile'));
 app.use('/api/upload', require('./routes/upload'));
 app.use('/api/admin', require('./routes/admin'));
 
-// Serve files from MongoDB
+// Serve files from MongoDB (Protected)
 const File = require('./models/File');
-app.get('/api/files/:id', async (req, res) => {
+const auth = require('./middleware/auth'); // Import auth middleware
+
+app.get('/api/files/:id', auth, async (req, res) => {
     try {
         const file = await File.findById(req.params.id);
         if (!file) {
             return res.status(404).json({ message: 'Fichier non trouvé' });
         }
+
+        // Check if user has access to this file (Optional but recommended: check if file belongs to a request the user can see)
+        // For now, basic auth is a huge improvement over public access.
+
         res.set('Content-Type', file.contentType);
         res.send(file.data);
     } catch (err) {

@@ -39,6 +39,12 @@ export const AuthProvider = ({ children }) => {
   const register = async (userData) => {
     try {
       const res = await api.post('/auth/register', userData);
+
+      // If user is a donor, they are not logged in immediately (waiting for validation)
+      if (userData.role === 'donor') {
+        return { success: true };
+      }
+
       localStorage.setItem('token', res.data.token);
       setUser(res.data.user);
       return { success: true };

@@ -3,11 +3,48 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const svgCaptcha = require('svg-captcha');
+const crypto = require('crypto');
+
+// CAPTCHA Secret (should be in env, but using a default for now)
+const CAPTCHA_SECRET = process.env.CAPTCHA_SECRET || 'secure_captcha_secret_key';
+
+// Helper to hash captcha
+const hashCaptcha = (text) => {
+    return crypto.createHmac('sha256', CAPTCHA_SECRET).update(text.toLowerCase()).digest('hex');
+};
+
+// Get CAPTCHA
+router.get('/captcha', (req, res) => {
+    const captcha = svgCaptcha.create({
+        size: 5,
+        noise: 2,
+        color: true,
+        background: '#f0f0f0'
+    });
+
+    const token = hashCaptcha(captcha.text);
+
+    res.type('svg');
+    res.status(200).json({
+        image: captcha.data,
+        token: token
+    });
+});
 
 // Register
 router.post('/register', async (req, res) => {
     try {
-        const { name, email, password, role } = req.body;
+        const { name, email, password, role, captchaAnswer, captchaToken } = req.body;
+
+        // Verify CAPTCHA
+        if (!captchaAnswer || !captchaToken) {
+            return res.status(400).json({ message: 'Veuillez remplir le CAPTCHA' });
+        }
+
+        if (hashCaptcha(captchaAnswer) !== captchaToken) {
+            return res.status(400).json({ message: 'CAPTCHA incorrect' });
+        }
 
         // Force role to be student or donor only (no public admin creation)
         const allowedRoles = ['student', 'donor'];
