@@ -15,7 +15,7 @@ services:
         generateValue: true
 
   # Frontend Static Site
-  - type: static
+  - type: web
     name: bourse-frontend
     env: static
     buildCommand: npm install && npm run build
