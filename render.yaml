@@ -14,13 +14,12 @@ services:
       - key: JWT_SECRET
         generateValue: true
 
+staticSites:
   # Frontend Static Site
-  - type: web
-    name: bourse-frontend
+  - name: bourse-frontend
     plan: free
-    env: static
     buildCommand: npm install && npm run build
-    staticPublishPath: ./dist
+    publishPath: ./dist
     envVars:
       - key: VITE_API_URL
         fromService:
