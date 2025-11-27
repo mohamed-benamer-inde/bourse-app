@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import api from '@/utils/api';
 import ProfileForm from '@/components/student/ProfileForm';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -108,6 +109,44 @@ const StudentDashboard = () => {
         }
     };
 
+    const uploadFile = async (file) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        const res = await api.post('/upload', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        return res.data.filePath;
+    };
+
+    const handleAddDocument = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        if (myRequest.documents && myRequest.documents.length >= 10) {
+            alert("Limite de 10 documents atteinte.");
+            return;
+        }
+
+        try {
+            // 1. Upload file
+            const filePath = await uploadFile(file);
+
+            // 2. Add to request
+            const res = await api.post(`/requests/${myRequest._id}/documents`, {
+                name: file.name,
+                url: filePath,
+                type: file.type
+            });
+
+            // 3. Update local state (reload page or update context would be better, but for now alert)
+            alert("Document ajouté avec succès !");
+            window.location.reload(); // Simple reload to refresh data
+        } catch (err) {
+            console.error("Error adding document", err);
+            alert("Erreur lors de l'ajout du document.");
+        }
+    };
+
     return (
         <div className="container mx-auto px-4 py-8 space-y-8">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -204,8 +243,57 @@ const StudentDashboard = () => {
             }
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-2">
+                <div className="lg:col-span-2 space-y-8">
                     <ProfileForm />
+
+                    {/* Documents Section */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-lg flex justify-between items-center">
+                                <span>Documents Justificatifs</span>
+                                <span className="text-sm font-normal text-muted-foreground">
+                                    {myRequest.documents?.length || 0}/10
+                                </span>
+                            </CardTitle>
+                            <CardDescription>
+                                Ajoutez ici vos relevés de notes, attestations, etc.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            {myRequest.documents && myRequest.documents.length > 0 ? (
+                                <ul className="space-y-2">
+                                    {myRequest.documents.map((doc, idx) => (
+                                        <li key={idx} className="flex items-center justify-between p-2 border rounded bg-gray-50">
+                                            <div className="flex items-center gap-2 overflow-hidden">
+                                                <FileText className="h-4 w-4 text-blue-500 flex-shrink-0" />
+                                                <a href={`${api.defaults.baseURL.replace('/api', '')}${doc.url}`} target="_blank" rel="noopener noreferrer" className="text-sm hover:underline truncate">
+                                                    {doc.name}
+                                                </a>
+                                            </div>
+                                            <span className="text-xs text-muted-foreground whitespace-nowrap">
+                                                {new Date(doc.uploadedAt).toLocaleDateString()}
+                                            </span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            ) : (
+                                <p className="text-sm text-muted-foreground text-center py-4">
+                                    Aucun document ajouté.
+                                </p>
+                            )}
+
+                            {(!myRequest.status || myRequest.status === 'DRAFT' || myRequest.status === 'REQUEST_INFO' || myRequest.status === 'SUBMITTED') && (
+                                <div className="flex items-center gap-2 mt-4">
+                                    <Input
+                                        type="file"
+                                        onChange={handleAddDocument}
+                                        className="cursor-pointer"
+                                        disabled={myRequest.documents?.length >= 10}
+                                    />
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
                 </div>
 
                 <div className="space-y-6">
@@ -251,7 +339,7 @@ const StudentDashboard = () => {
                     </Card>
                 </div>
             </div>
-        </div >
+        </div>
     );
 };
 

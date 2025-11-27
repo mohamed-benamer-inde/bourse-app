@@ -117,4 +117,40 @@ router.put('/:id/status', auth, async (req, res) => {
     }
 });
 
+// Add document to request
+router.post('/:id/documents', auth, async (req, res) => {
+    try {
+        const { name, url, type } = req.body;
+        const request = await Request.findById(req.params.id);
+
+        if (!request) {
+            return res.status(404).json({ message: 'Demande non trouvée' });
+        }
+
+        // Check if student owns the request
+        if (request.student.toString() !== req.user.id) {
+            return res.status(401).json({ message: 'Non autorisé' });
+        }
+
+        // Check limit (10 docs)
+        if (request.documents.length >= 10) {
+            return res.status(400).json({ message: 'Limite de 10 documents atteinte' });
+        }
+
+        request.documents.push({ name, url, type });
+
+        // Add history entry
+        request.history.push({
+            action: `Ajout document : ${name}`,
+            user: 'Étudiant'
+        });
+
+        await request.save();
+        res.json(request);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Erreur serveur');
+    }
+});
+
 module.exports = router;

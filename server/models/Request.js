@@ -19,6 +19,15 @@ const requestSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
+    documents: [{
+        name: String,
+        url: String,
+        type: String,
+        uploadedAt: {
+            type: Date,
+            default: Date.now
+        }
+    }],
     history: [{
         date: {
             type: Date,

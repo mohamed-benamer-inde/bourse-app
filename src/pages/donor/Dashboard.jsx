@@ -9,6 +9,7 @@ import { formatCurrency } from '@/config/constants';
 import { useData } from '@/context/DataContext';
 import { useAuth } from '@/context/AuthContext';
 import { Modal } from '@/components/ui/modal';
+import api from '@/utils/api';
 
 const DonorDashboard = () => {
     const { user } = useAuth();
@@ -221,17 +222,31 @@ const DonorDashboard = () => {
                         </div>
 
                         <div className="space-y-2">
-                            <h3 className="font-semibold text-lg border-b pb-1">Documents</h3>
-                            <div className="flex items-center justify-between bg-gray-50 p-3 rounded-md">
-                                <div className="flex items-center gap-2">
-                                    <CheckCircle className={`h-5 w-5 ${selectedRequest.student.transcriptStatus === 'valid' ? 'text-green-500' : 'text-yellow-500'}`} />
-                                    <span className="font-medium">Relevé de notes</span>
+                            <h3 className="font-semibold text-lg border-b pb-1">Documents ({selectedRequest.documents?.length || 0})</h3>
+                            {selectedRequest.documents && selectedRequest.documents.length > 0 ? (
+                                <div className="space-y-2">
+                                    {selectedRequest.documents.map((doc, idx) => (
+                                        <div key={idx} className="flex items-center justify-between bg-gray-50 p-3 rounded-md">
+                                            <div className="flex items-center gap-2 overflow-hidden">
+                                                <div className="bg-blue-100 p-2 rounded">
+                                                    <Eye className="h-4 w-4 text-blue-600" />
+                                                </div>
+                                                <div className="flex flex-col">
+                                                    <span className="font-medium text-sm truncate max-w-[200px]">{doc.name}</span>
+                                                    <span className="text-xs text-muted-foreground">{new Date(doc.uploadedAt).toLocaleDateString()}</span>
+                                                </div>
+                                            </div>
+                                            <Button variant="outline" size="sm" asChild>
+                                                <a href={`${api.defaults.baseURL.replace('/api', '')}${doc.url}`} target="_blank" rel="noopener noreferrer">
+                                                    Voir
+                                                </a>
+                                            </Button>
+                                        </div>
+                                    ))}
                                 </div>
-                                <Button variant="outline" size="sm">
-                                    <Eye className="h-4 w-4 mr-2" />
-                                    Voir le document
-                                </Button>
-                            </div>
+                            ) : (
+                                <p className="text-sm text-muted-foreground italic">Aucun document fourni.</p>
+                            )}
                         </div>
                     </div>
                 )}

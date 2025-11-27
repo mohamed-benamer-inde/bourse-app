@@ -19,7 +19,7 @@ const upload = multer({
     fileFilter: function (req, file, cb) {
         checkFileType(file, cb);
     }
-}).single('transcript');
+}).single('file');
 
 // Check file type
 function checkFileType(file, cb) {

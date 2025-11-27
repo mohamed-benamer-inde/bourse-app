@@ -27,6 +27,10 @@ Ouvrez un terminal dans le dossier de votre projet (`c:\Users\amine\Desktop\Proj
 ```bash
 git init
 git add .
+# Si c'est la première fois que vous utilisez Git, configurez votre identité :
+git config --global user.email "votre_email@exemple.com"
+git config --global user.name "Votre Nom"
+
 git commit -m "Initial commit"
 git branch -M main
 git remote add origin https://github.com/VOTRE_NOM_UTILISATEUR/bourse-app.git
@@ -69,3 +73,13 @@ Une fois le déploiement terminé (vert), vous pourrez accéder à votre applica
 
 > [!NOTE]
 > Le fichier `src/utils/api.js` a été configuré pour détecter automatiquement l'URL du backend sur Render.
+
+## Étape 6 : Accéder à votre site
+
+Une fois le déploiement terminé, vous aurez deux services dans votre tableau de bord Render :
+
+1.  **bourse-api** : C'est votre Backend (API). Son URL affiche "API is running...". C'est normal !
+2.  **bourse-frontend** : C'est votre Site Web (l'interface utilisateur).
+    *   Cliquez sur le service `bourse-frontend`.
+    *   Cliquez sur l'URL affichée en haut à gauche (ex: `https://bourse-frontend-xxxx.onrender.com`).
+    *   **C'est ce lien que vous devez partager et utiliser.**
