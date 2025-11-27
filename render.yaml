@@ -2,6 +2,7 @@ services:
   # Backend Service
   - type: web
     name: bourse-api
+    plan: free
     env: node
     buildCommand: cd server && npm install
     startCommand: cd server && npm start
@@ -16,6 +17,7 @@ services:
   # Frontend Static Site
   - type: web
     name: bourse-frontend
+    plan: free
     env: static
     buildCommand: npm install && npm run build
     staticPublishPath: ./dist
