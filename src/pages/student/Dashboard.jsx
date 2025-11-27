@@ -143,7 +143,7 @@ const StudentDashboard = () => {
             window.location.reload(); // Simple reload to refresh data
         } catch (err) {
             console.error("Error adding document", err);
-            alert("Erreur lors de l'ajout du document.");
+            alert(err.response?.data?.message || err.message || "Erreur lors de l'ajout du document.");
         }
     };
 
