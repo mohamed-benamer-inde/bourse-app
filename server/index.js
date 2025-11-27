@@ -60,9 +60,23 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/requests', require('./routes/requests'));
 app.use('/api/profile', require('./routes/profile'));
 app.use('/api/upload', require('./routes/upload'));
+app.use('/api/admin', require('./routes/admin'));
 
-// Make uploads folder static
-app.use('/uploads', express.static('uploads'));
+// Serve files from MongoDB
+const File = require('./models/File');
+app.get('/api/files/:id', async (req, res) => {
+    try {
+        const file = await File.findById(req.params.id);
+        if (!file) {
+            return res.status(404).json({ message: 'Fichier non trouvé' });
+        }
+        res.set('Content-Type', file.contentType);
+        res.send(file.data);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Erreur serveur');
+    }
+});
 
 app.get('/', (req, res) => {
     res.send('API is running...');

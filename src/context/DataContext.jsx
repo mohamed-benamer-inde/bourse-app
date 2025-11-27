@@ -20,20 +20,6 @@ export const DataProvider = ({ children }) => {
                     // Mock/Enrich data for demo purposes if fields are missing
                     const enrichedRequests = requestsData.map(req => {
                         if (!req.student) req.student = {};
-                        // Ensure student object has necessary fields for demo
-                        if (!req.student.name) req.student.name = "Amine El Amrani";
-                        if (!req.student.email) req.student.email = "amine@example.com";
-                        if (!req.student.phone) req.student.phone = "06 12 34 56 78";
-                        if (!req.student.educationLevel) req.student.educationLevel = "Master 1";
-                        if (!req.student.studyField) req.student.studyField = "Informatique";
-                        if (!req.student.rsuScore) req.student.rsuScore = "9.45";
-                        if (!req.student.resources) req.student.resources = 1200;
-                        if (!req.student.description) req.student.description = "Étudiant motivé cherchant un soutien pour financer son projet de fin d'études en IA.";
-                        if (!req.student.gradeCurrent) req.student.gradeCurrent = 16.5;
-                        if (!req.student.gradeN1) req.student.gradeN1 = 15.8;
-                        if (!req.student.gradeN2) req.student.gradeN2 = 14.5;
-                        if (!req.student.gradeN3) req.student.gradeN3 = 16.0;
-                        if (!req.student.transcriptStatus) req.student.transcriptStatus = 'valid';
 
                         // Initialize exchanges if not present
                         if (!req.exchanges) req.exchanges = [];

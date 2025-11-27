@@ -9,6 +9,10 @@ router.post('/register', async (req, res) => {
     try {
         const { name, email, password, role } = req.body;
 
+        // Force role to be student or donor only (no public admin creation)
+        const allowedRoles = ['student', 'donor'];
+        const userRole = allowedRoles.includes(role) ? role : 'student';
+
         // Check if user exists
         let user = await User.findOne({ email });
         if (user) {
@@ -24,7 +28,8 @@ router.post('/register', async (req, res) => {
             name,
             email,
             password: hashedPassword,
-            role: role || 'student'
+            role: userRole,
+            isValidated: userRole === 'student' // Donors need validation
         });
 
         await user.save();
@@ -68,6 +73,11 @@ router.post('/login', async (req, res) => {
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
             return res.status(400).json({ message: 'Identifiants invalides' });
+        }
+
+        // Check validation for donors
+        if (user.role === 'donor' && !user.isValidated) {
+            return res.status(403).json({ message: 'Votre compte est en attente de validation par un administrateur.' });
         }
 
         // Create token

@@ -16,8 +16,14 @@ const userSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        enum: ['student', 'donor', 'admin'],
+        enum: ['student', 'donor', 'admin', 'superadmin'],
         default: 'student'
+    },
+    isValidated: {
+        type: Boolean,
+        default: function () {
+            return this.role === 'student'; // Students are validated by default, donors need approval
+        }
     },
     // Student specific fields
     address: String,

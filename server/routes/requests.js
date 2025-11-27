@@ -88,6 +88,25 @@ router.put('/:id/status', auth, async (req, res) => {
         // Donor: ACCEPTED -> PAID
         else if (status === 'PAID' && req.user.role === 'donor') {
             if (request.status !== 'ACCEPTED' || request.donor.toString() !== req.user.id) return res.status(400).json({ message: 'Non autorisé' });
+
+            // PURGE LOGIC: Delete all documents associated with this request
+            if (request.documents && request.documents.length > 0) {
+                const File = require('../models/File');
+                const fileIds = request.documents.map(doc => {
+                    // Extract ID from URL /api/files/:id
+                    const parts = doc.url.split('/');
+                    return parts[parts.length - 1];
+                });
+
+                try {
+                    await File.deleteMany({ _id: { $in: fileIds } });
+                    console.log(`Purged ${fileIds.length} documents for request ${request._id}`);
+                    request.documents = []; // Clear the array
+                } catch (purgeErr) {
+                    console.error('Error purging documents:', purgeErr);
+                    // Continue even if purge fails, but log it
+                }
+            }
         }
         // Student: PAID -> CONFIRMED
         else if (status === 'CONFIRMED' && req.user.role === 'student') {

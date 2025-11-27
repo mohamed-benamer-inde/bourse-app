@@ -1,81 +1,159 @@
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '@/context/AuthContext';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Users, FileText, CheckCircle, AlertCircle, Heart } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { CheckCircle, Shield, UserPlus } from 'lucide-react';
+import api from '@/utils/api';
 
 const AdminDashboard = () => {
-    // Mock data
-    const stats = [
-        { label: 'Total Étudiants', value: '124', icon: Users, color: 'text-blue-600' },
-        { label: 'Total Donateurs', value: '45', icon: Heart, color: 'text-red-600' },
-        { label: 'Dossiers Validés', value: '89', icon: CheckCircle, color: 'text-green-600' },
-        { label: 'En Attente', value: '35', icon: AlertCircle, color: 'text-yellow-600' },
-    ];
+    const { user } = useAuth();
+    const [users, setUsers] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [newAdmin, setNewAdmin] = useState({ name: '', email: '', password: '' });
 
-    const recentRequests = [
-        { id: 1, student: 'Sarah Martin', status: 'En attente', date: '24/11/2024' },
-        { id: 2, student: 'Thomas Dubois', status: 'Promesse', date: '23/11/2024' },
-        { id: 3, student: 'Léa Bernard', status: 'Payé', date: '22/11/2024' },
-        { id: 4, student: 'Karim Benali', status: 'Validé', date: '21/11/2024' },
-    ];
+    useEffect(() => {
+        fetchUsers();
+    }, []);
+
+    const fetchUsers = async () => {
+        try {
+            const res = await api.get('/admin/users');
+            setUsers(res.data);
+        } catch (err) {
+            console.error("Error fetching users", err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleValidateDonor = async (userId) => {
+        try {
+            await api.put(`/admin/users/${userId}/validate`);
+            // Update local state
+            setUsers(users.map(u => u._id === userId ? { ...u, isValidated: true } : u));
+            alert("Donateur validé avec succès !");
+        } catch (err) {
+            console.error("Error validating donor", err);
+            alert("Erreur lors de la validation.");
+        }
+    };
+
+    const handleCreateAdmin = async (e) => {
+        e.preventDefault();
+        try {
+            await api.post('/admin/admins', newAdmin);
+            alert("Administrateur créé avec succès !");
+            setNewAdmin({ name: '', email: '', password: '' });
+            fetchUsers();
+        } catch (err) {
+            console.error("Error creating admin", err);
+            alert(err.response?.data?.message || "Erreur lors de la création.");
+        }
+    };
+
+    const pendingDonors = users.filter(u => u.role === 'donor' && !u.isValidated);
+    const allAdmins = users.filter(u => u.role === 'admin' || u.role === 'superadmin');
 
     return (
         <div className="container mx-auto px-4 py-8 space-y-8">
             <div>
                 <h1 className="text-3xl font-bold">Administration</h1>
-                <p className="text-muted-foreground">Vue d'ensemble de la plateforme.</p>
+                <p className="text-muted-foreground">Gérez les utilisateurs et la sécurité de la plateforme.</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {stats.map((stat, index) => (
-                    <Card key={index}>
-                        <CardContent className="flex items-center p-6">
-                            <div className={`p-3 rounded-full bg-gray-100 mr-4 ${stat.color}`}>
-                                <stat.icon className="h-6 w-6" />
-                            </div>
-                            <div>
-                                <p className="text-sm font-medium text-muted-foreground">{stat.label}</p>
-                                <h3 className="text-2xl font-bold">{stat.value}</h3>
+            <Tabs defaultValue="donors">
+                <TabsList>
+                    <TabsTrigger value="donors">Donateurs en attente ({pendingDonors.length})</TabsTrigger>
+                    <TabsTrigger value="admins">Administrateurs</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="donors" className="space-y-4">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Validation des Donateurs</CardTitle>
+                            <CardDescription>Validez les comptes donateurs pour leur donner accès aux dossiers étudiants.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            {pendingDonors.length > 0 ? (
+                                <div className="space-y-4">
+                                    {pendingDonors.map(donor => (
+                                        <div key={donor._id} className="flex items-center justify-between p-4 border rounded-lg bg-white">
+                                            <div>
+                                                <h4 className="font-semibold">{donor.name}</h4>
+                                                <p className="text-sm text-muted-foreground">{donor.email}</p>
+                                                <p className="text-xs text-muted-foreground">Inscrit le {new Date(donor.createdAt).toLocaleDateString()}</p>
+                                            </div>
+                                            <Button onClick={() => handleValidateDonor(donor._id)} className="bg-green-600 hover:bg-green-700">
+                                                <CheckCircle className="h-4 w-4 mr-2" />
+                                                Valider
+                                            </Button>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="text-center text-muted-foreground py-8">Aucun donateur en attente de validation.</p>
+                            )}
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+
+                <TabsContent value="admins" className="space-y-4">
+                    {user?.role === 'superadmin' && (
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Créer un nouvel Administrateur</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <form onSubmit={handleCreateAdmin} className="flex gap-4 items-end">
+                                    <div className="space-y-2 flex-1">
+                                        <label className="text-sm font-medium">Nom</label>
+                                        <Input value={newAdmin.name} onChange={e => setNewAdmin({ ...newAdmin, name: e.target.value })} required />
+                                    </div>
+                                    <div className="space-y-2 flex-1">
+                                        <label className="text-sm font-medium">Email</label>
+                                        <Input type="email" value={newAdmin.email} onChange={e => setNewAdmin({ ...newAdmin, email: e.target.value })} required />
+                                    </div>
+                                    <div className="space-y-2 flex-1">
+                                        <label className="text-sm font-medium">Mot de passe</label>
+                                        <Input type="password" value={newAdmin.password} onChange={e => setNewAdmin({ ...newAdmin, password: e.target.value })} required />
+                                    </div>
+                                    <Button type="submit">
+                                        <UserPlus className="h-4 w-4 mr-2" />
+                                        Créer
+                                    </Button>
+                                </form>
+                            </CardContent>
+                        </Card>
+                    )}
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Liste des Administrateurs</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="space-y-2">
+                                {allAdmins.map(admin => (
+                                    <div key={admin._id} className="flex items-center justify-between p-3 bg-gray-50 rounded">
+                                        <div className="flex items-center gap-3">
+                                            <Shield className={`h-5 w-5 ${admin.role === 'superadmin' ? 'text-purple-600' : 'text-blue-600'}`} />
+                                            <div>
+                                                <span className="font-medium">{admin.name}</span>
+                                                <span className="text-xs text-muted-foreground ml-2">({admin.email})</span>
+                                            </div>
+                                        </div>
+                                        <Badge variant={admin.role === 'superadmin' ? 'default' : 'secondary'}>
+                                            {admin.role === 'superadmin' ? 'Super Admin' : 'Admin'}
+                                        </Badge>
+                                    </div>
+                                ))}
                             </div>
                         </CardContent>
                     </Card>
-                ))}
-            </div>
-
-            <Card>
-                <CardHeader>
-                    <CardTitle>Dernières Activités</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="relative w-full overflow-auto">
-                        <table className="w-full caption-bottom text-sm">
-                            <thead className="[&_tr]:border-b">
-                                <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
-                                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Étudiant</th>
-                                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Date</th>
-                                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Statut</th>
-                                    <th className="h-12 px-4 text-right align-middle font-medium text-muted-foreground">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody className="[&_tr:last-child]:border-0">
-                                {recentRequests.map((request) => (
-                                    <tr key={request.id} className="border-b transition-colors hover:bg-muted/50">
-                                        <td className="p-4 align-middle font-medium">{request.student}</td>
-                                        <td className="p-4 align-middle">{request.date}</td>
-                                        <td className="p-4 align-middle">
-                                            <Badge variant="outline">{request.status}</Badge>
-                                        </td>
-                                        <td className="p-4 align-middle text-right">
-                                            <Button variant="ghost" size="sm">Voir</Button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                </CardContent>
-            </Card>
+                </TabsContent>
+            </Tabs>
         </div>
     );
 };
