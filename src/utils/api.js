@@ -1,8 +1,13 @@
 import axios from 'axios';
 
 const getBaseUrl = () => {
-    // Fallback to the known Render URL if env var fails
     let url = import.meta.env.VITE_API_URL || 'https://bourse-api-a31m.onrender.com';
+
+    // If it's just a hostname (no dots) like "bourse-api-a31m", append .onrender.com
+    if (!url.includes('.') && !url.includes('localhost')) {
+        url = `${url}.onrender.com`;
+    }
+
     if (!url.startsWith('http')) {
         url = `https://${url}`;
     }
