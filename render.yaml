@@ -24,4 +24,4 @@ services:
         fromService:
           type: web
           name: bourse-api
-          property: url
+          property: host

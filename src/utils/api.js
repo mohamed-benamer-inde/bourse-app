@@ -1,7 +1,15 @@
 import axios from 'axios';
 
+const getBaseUrl = () => {
+    let url = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    if (!url.startsWith('http')) {
+        url = `https://${url}`;
+    }
+    return `${url}/api`;
+};
+
 const api = axios.create({
-    baseURL: (import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api',
+    baseURL: getBaseUrl(),
     timeout: 10000, // 10 seconds timeout
     headers: {
         'Content-Type': 'application/json'
