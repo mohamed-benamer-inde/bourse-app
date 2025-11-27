@@ -44,7 +44,7 @@ export const AuthProvider = ({ children }) => {
       return { success: true };
     } catch (err) {
       console.error("Register error", err);
-      return { success: false, message: err.response?.data?.message || 'Erreur d\'inscription' };
+      return { success: false, message: err.response?.data?.message || err.message || 'Erreur d\'inscription' };
     }
   };
 

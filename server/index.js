@@ -19,6 +19,7 @@ const connectDB = async () => {
         await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/bourse_app');
         console.log('Connected to MongoDB');
     } catch (err) {
+        console.error('MongoDB Connection Error:', err);
         console.log('Could not connect to local MongoDB, attempting to start in-memory database...');
         try {
             const { MongoMemoryServer } = require('mongodb-memory-server');
