@@ -1,4 +1,3 @@
-```javascript
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
@@ -46,7 +45,7 @@ router.post('/', (req, res) => {
             // The URL structure will be /api/files/:id
             res.json({
                 message: 'File uploaded!',
-                filePath: `/ files / ${ newFile._id } `, // Frontend expects this format
+                filePath: `/api/files/${newFile._id}`, // Frontend expects this format
                 fileName: newFile.filename
             });
 
@@ -58,4 +57,3 @@ router.post('/', (req, res) => {
 });
 
 module.exports = router;
-```
