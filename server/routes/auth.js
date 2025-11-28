@@ -15,10 +15,20 @@ const hashCaptcha = (text) => {
 };
 
 // Get CAPTCHA
-res.status(200).json({
-    image: captcha.data,
-    token: token
-});
+router.get('/captcha', (req, res) => {
+    const captcha = svgCaptcha.create({
+        size: 5,
+        noise: 2,
+        color: true,
+        background: '#f0f0f0'
+    });
+
+    const token = hashCaptcha(captcha.text);
+
+    res.status(200).json({
+        image: captcha.data,
+        token: token
+    });
 });
 
 // Register
