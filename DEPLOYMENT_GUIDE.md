@@ -64,6 +64,8 @@ Nous avons préparé un fichier `render.yaml` qui automatise la configuration.
     *   `MONGODB_URI` : Collez la chaîne de connexion MongoDB Atlas (étape 4).
     *   `JWT_SECRET` : Render va en générer un automatiquement (ou mettez une chaîne aléatoire longue).
     *   `FRONTEND_URL` : L'URL de votre site frontend (ex: `https://bourse-frontend-xxxx.onrender.com`).
+    *   `SUPERADMIN_EMAIL` : L'email de votre choix pour le compte Super Admin.
+    *   `SUPERADMIN_PASSWORD` : Le mot de passe de votre choix pour le compte Super Admin.
         *   *Note : Vous pouvez ajouter cette variable après le premier déploiement, une fois que vous connaissez l'URL du frontend.*
         *   *Important : Cela sécurise votre API pour qu'elle ne réponde qu'à votre site.*
 7.  Cliquez sur "Apply".

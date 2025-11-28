@@ -8,8 +8,13 @@ const seedSuperAdmin = async () => {
         await mongoose.connect(process.env.MONGODB_URI);
         console.log('MongoDB Connected');
 
-        const email = process.env.SUPERADMIN_EMAIL || 'superadmin@bourse.com';
-        const password = process.env.SUPERADMIN_PASSWORD || 'superadmin123';
+        const email = process.env.SUPERADMIN_EMAIL;
+        const password = process.env.SUPERADMIN_PASSWORD;
+
+        if (!email || !password) {
+            console.warn('⚠️ SUPERADMIN_EMAIL or SUPERADMIN_PASSWORD not set. Skipping Super Admin creation.');
+            process.exit(0);
+        }
 
         let user = await User.findOne({ email });
         if (user) {
