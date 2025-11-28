@@ -237,7 +237,7 @@ const DonorDashboard = () => {
                                                 </div>
                                             </div>
                                             <Button variant="outline" size="sm" asChild>
-                                                <a href={`${api.defaults.baseURL.replace('/api', '')}${doc.url}`} target="_blank" rel="noopener noreferrer">
+                                                <a href={`${api.defaults.baseURL.replace('/api', '')}${doc.url}?token=${localStorage.getItem('token')}`} target="_blank" rel="noopener noreferrer">
                                                     Voir
                                                 </a>
                                             </Button>
