@@ -300,7 +300,7 @@ const StudentDashboard = () => {
                                         <li key={idx} className="flex items-center justify-between p-2 border rounded bg-gray-50">
                                             <div className="flex items-center gap-2 overflow-hidden">
                                                 <FileText className="h-4 w-4 text-blue-500 flex-shrink-0" />
-                                                <a href={`${api.defaults.baseURL.replace('/api', '')}${doc.url}`} target="_blank" rel="noopener noreferrer" className="text-sm hover:underline truncate">
+                                                <a href={`${api.defaults.baseURL.replace('/api', '')}${doc.url}?token=${localStorage.getItem('token')}`} target="_blank" rel="noopener noreferrer" className="text-sm hover:underline truncate">
                                                     {doc.name}
                                                 </a>
                                             </div>
