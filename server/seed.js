@@ -18,7 +18,14 @@ const seedSuperAdmin = async () => {
 
         let user = await User.findOne({ email });
         if (user) {
-            console.log('Super Admin already exists');
+            console.log('Super Admin already exists. Updating role to ensure correctness...');
+            user.role = 'superadmin';
+            user.isValidated = true;
+            // Optional: Update password if you want to enforce the env var password
+            // const salt = await bcrypt.genSalt(10);
+            // user.password = await bcrypt.hash(password, salt);
+            await user.save();
+            console.log('Super Admin role updated.');
             process.exit(0);
         }
 

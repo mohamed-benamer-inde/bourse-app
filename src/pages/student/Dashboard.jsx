@@ -122,6 +122,11 @@ const StudentDashboard = () => {
         const file = e.target.files[0];
         if (!file) return;
 
+        if (!myRequest._id) {
+            alert("Veuillez d'abord créer votre dossier en cliquant sur 'Créer et soumettre' avant d'ajouter des documents.");
+            return;
+        }
+
         if (myRequest.documents && myRequest.documents.length >= 10) {
             alert("Limite de 10 documents atteinte.");
             return;
