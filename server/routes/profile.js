@@ -18,12 +18,13 @@ router.get('/', auth, async (req, res) => {
 router.put('/', auth, async (req, res) => {
     try {
         const {
-            address, educationLevel, studyField, rsuScore, resources, description,
+            address, phone, educationLevel, studyField, rsuScore, resources, description,
             gradeCurrent, gradeN1, gradeN2, gradeN3, transcriptStatus
         } = req.body;
 
         const userFields = {};
         if (address) userFields.address = address;
+        if (phone) userFields.phone = phone;
         if (educationLevel) userFields.educationLevel = educationLevel;
         if (studyField) userFields.studyField = studyField;
         if (rsuScore) userFields.rsuScore = rsuScore;

@@ -13,13 +13,13 @@ router.post('/', auth, async (req, res) => {
             return res.status(400).json({ message: 'Vous avez déjà une demande en cours' });
         }
 
-        const { amountNeeded } = req.body;
+        const { amountNeeded, status } = req.body;
 
         request = new Request({
             student: req.user.id,
             amountNeeded,
-            status: 'SUBMITTED',
-            history: [{ action: 'Soumission du dossier', user: 'Étudiant' }]
+            status: status || 'SUBMITTED', // Default to SUBMITTED for backward compatibility unless specified
+            history: [{ action: 'Création du dossier', user: 'Étudiant' }]
         });
 
         await request.save();

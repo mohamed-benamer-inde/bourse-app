@@ -71,20 +71,42 @@ const StudentDashboard = () => {
 
     const completion = calculateCompletion(user);
 
-    const handleSubmitRequest = async (amountFromInput) => {
-        console.log('handleSubmitRequest called', { myRequest, amountFromInput });
+    const handleSaveDraft = async (amountFromInput) => {
         try {
             if (myRequest._id) {
-                console.log('Updating existing request');
+                // If already exists, just alert (amount update not implemented yet, but draft is saved)
+                alert("Brouillon sauvegardé.");
+            } else {
+                if (amountFromInput) {
+                    const newReq = await createRequest(amountFromInput, 'DRAFT');
+                    if (newReq) alert("Brouillon créé ! Vous pouvez maintenant ajouter des documents.");
+                    else alert("Erreur lors de la création du brouillon.");
+                } else {
+                    alert("Veuillez saisir un montant");
+                }
+            }
+        } catch (error) {
+            console.error("Error in handleSaveDraft", error);
+        }
+    };
+
+    const handleSubmitRequest = async (amountFromInput) => {
+        // Validation: Check if profile is complete
+        if (completion < 80) { // Example threshold, or check specific fields
+            alert("Veuillez compléter votre profil avant de soumettre.");
+            return;
+        }
+
+        try {
+            if (myRequest._id) {
                 const success = await updateRequestStatus(myRequest._id, 'SUBMITTED', user?.id || user?._id, user?.name || 'Étudiant');
                 if (success) alert("Dossier soumis avec succès !");
                 else alert("Erreur lors de la soumission.");
             } else {
-                console.log('Creating new request');
                 if (amountFromInput) {
-                    const success = await createRequest(amountFromInput);
-                    if (success) alert("Demande créée avec succès !");
-                    else alert("Erreur lors de la création de la demande.");
+                    const success = await createRequest(amountFromInput, 'SUBMITTED');
+                    if (success) alert("Demande créée et soumise !");
+                    else alert("Erreur lors de la création.");
                 } else {
                     alert("Veuillez saisir un montant");
                 }
@@ -123,7 +145,7 @@ const StudentDashboard = () => {
         if (!file) return;
 
         if (!myRequest._id) {
-            alert("Veuillez d'abord créer votre dossier en cliquant sur 'Créer et soumettre' avant d'ajouter des documents.");
+            alert("Veuillez d'abord sauvegarder le brouillon avant d'ajouter des documents.");
             return;
         }
 
@@ -164,7 +186,7 @@ const StudentDashboard = () => {
                         <span className="text-sm font-medium">Statut :</span>
                         {getStatusBadge(myRequest.status)}
                     </div>
-                    {myRequest.status === 'DRAFT' && (
+                    {(!myRequest.status || myRequest.status === 'DRAFT') && (
                         <div className="flex items-center gap-2">
                             {!myRequest._id && (
                                 <Input
@@ -174,14 +196,21 @@ const StudentDashboard = () => {
                                     id="amount-input"
                                 />
                             )}
+                            <Button variant="outline" onClick={() => {
+                                const amountInput = document.getElementById('amount-input');
+                                const amount = amountInput ? amountInput.value : (myRequest.amountNeeded || null);
+                                handleSaveDraft(amount);
+                            }}>
+                                <FileText className="h-4 w-4 mr-2" />
+                                Sauvegarder Brouillon
+                            </Button>
                             <Button onClick={() => {
                                 const amountInput = document.getElementById('amount-input');
-                                const amount = amountInput ? amountInput.value : null;
-                                console.log('Submit clicked, amount:', amount);
+                                const amount = amountInput ? amountInput.value : (myRequest.amountNeeded || null);
                                 handleSubmitRequest(amount);
                             }}>
                                 <Send className="h-4 w-4 mr-2" />
-                                {myRequest._id ? 'Soumettre le dossier' : 'Créer et soumettre'}
+                                Soumettre
                             </Button>
                         </div>
                     )}

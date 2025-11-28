@@ -84,11 +84,11 @@ export const DataProvider = ({ children }) => {
         }
     };
 
-    const createRequest = async (amountNeeded) => {
+    const createRequest = async (amountNeeded, status = 'SUBMITTED') => {
         try {
-            const res = await api.post('/requests', { amountNeeded });
+            const res = await api.post('/requests', { amountNeeded, status });
             setRequests(prev => [...prev, res.data]);
-            return true;
+            return res.data;
         } catch (err) {
             console.error("Error creating request", err);
             return false;
