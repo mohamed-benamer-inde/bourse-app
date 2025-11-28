@@ -44,8 +44,7 @@ const StudentDashboard = () => {
             user?.id || user?._id,
             user?.name,
             {
-                response: responseMessage,
-                attachments: attachments
+                response: responseMessage
             }
         );
 
@@ -248,23 +247,6 @@ const StudentDashboard = () => {
                                     value={responseMessage}
                                     onChange={(e) => setResponseMessage(e.target.value)}
                                 />
-
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium text-gray-700">Joindre des documents :</label>
-                                    <div className="flex items-center gap-2">
-                                        <Input
-                                            type="file"
-                                            multiple
-                                            onChange={handleFileChange}
-                                            className="cursor-pointer"
-                                        />
-                                    </div>
-                                    {selectedFiles.length > 0 && (
-                                        <div className="text-xs text-muted-foreground">
-                                            {selectedFiles.length} fichier(s) sélectionné(s)
-                                        </div>
-                                    )}
-                                </div>
 
                                 <Button onClick={handleSubmitResponse} disabled={!responseMessage.trim()} className="w-full sm:w-auto">
                                     <Send className="h-4 w-4 mr-2" />

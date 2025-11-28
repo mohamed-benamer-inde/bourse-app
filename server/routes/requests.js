@@ -117,6 +117,21 @@ router.put('/:id/status', auth, async (req, res) => {
             if (request.status !== 'ANALYZING' || request.donor.toString() !== req.user.id) return res.status(400).json({ message: 'Non autorisé' });
             request.donor = null;
         }
+        // Student: REQUEST_INFO -> ANALYZING (Response)
+        else if (status === 'ANALYZING' && req.user.role === 'student') {
+            if (request.status !== 'REQUEST_INFO' || request.student.toString() !== req.user.id) return res.status(400).json({ message: 'Non autorisé' });
+
+            // Add response to exchanges
+            if (req.body.data && req.body.data.response) {
+                if (!request.exchanges) request.exchanges = [];
+                request.exchanges.push({
+                    date: new Date(),
+                    type: 'RESPONSE',
+                    message: req.body.data.response,
+                    from: 'Étudiant'
+                });
+            }
+        }
         else {
             return res.status(400).json({ message: 'Action non autorisée ou statut invalide' });
         }
