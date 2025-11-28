@@ -1,5 +1,15 @@
 const mongoose = require('mongoose');
 
+const documentSchema = new mongoose.Schema({
+    name: String,
+    url: String,
+    type: String,
+    uploadedAt: {
+        type: Date,
+        default: Date.now
+    }
+});
+
 const requestSchema = new mongoose.Schema({
     student: {
         type: mongoose.Schema.Types.ObjectId,
@@ -19,15 +29,7 @@ const requestSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
-    documents: [{
-        name: String,
-        url: String,
-        type: String,
-        uploadedAt: {
-            type: Date,
-            default: Date.now
-        }
-    }],
+    documents: [documentSchema],
     history: [{
         date: {
             type: Date,
