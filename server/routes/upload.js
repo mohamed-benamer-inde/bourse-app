@@ -25,11 +25,19 @@ const upload = multer({
 router.post('/', (req, res) => {
     upload(req, res, async (err) => {
         if (err) {
+            console.error('Multer upload error:', err);
             return res.status(400).json({ message: err.message });
         }
         if (!req.file) {
+            console.error('No file received in request');
             return res.status(400).json({ message: 'No file selected!' });
         }
+
+        console.log('File received:', {
+            originalname: req.file.originalname,
+            mimetype: req.file.mimetype,
+            size: req.file.size
+        });
 
         try {
             // Create new File document

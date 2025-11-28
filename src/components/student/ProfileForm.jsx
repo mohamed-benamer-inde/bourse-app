@@ -201,42 +201,7 @@ const ProfileForm = () => {
                         </div>
                     </div>
 
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium">Relevé de notes (PDF/Image)</label>
-                        <div className={`border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center gap-2 transition-colors relative ${transcriptStatus === 'valid' ? 'border-green-500 bg-green-50' : 'hover:bg-gray-50'}`}>
-                            <Input
-                                type="file"
-                                accept=".pdf,.jpg,.jpeg,.png"
-                                onChange={handleFileChange}
-                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                            />
-                            {transcriptStatus === 'none' && (
-                                <>
-                                    <Upload className="h-8 w-8 text-muted-foreground" />
-                                    <span className="text-sm text-muted-foreground">Cliquez pour uploader votre relevé</span>
-                                </>
-                            )}
-                            {transcriptStatus === 'analyzing' && (
-                                <>
-                                    <Loader2 className="h-8 w-8 text-blue-500 animate-spin" />
-                                    <span className="text-sm text-blue-600">Analyse du document en cours...</span>
-                                </>
-                            )}
-                            {transcriptStatus === 'valid' && (
-                                <>
-                                    <Check className="h-8 w-8 text-green-600" />
-                                    <span className="text-sm text-green-700 font-medium">Document validé et analysé</span>
-                                    <span className="text-xs text-green-600">{transcriptFile?.name}</span>
-                                </>
-                            )}
-                            {transcriptStatus === 'invalid' && (
-                                <>
-                                    <AlertCircle className="h-8 w-8 text-red-500" />
-                                    <span className="text-sm text-red-600">Document invalide ou illisible</span>
-                                </>
-                            )}
-                        </div>
-                    </div>
+
                 </CardContent>
                 <CardFooter className="flex flex-col items-start gap-4">
                     <Button type="submit" className="w-full md:w-auto" disabled={isSubmitting}>
