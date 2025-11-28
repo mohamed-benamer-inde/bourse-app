@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { GraduationCap, Heart } from 'lucide-react';
+import api from '@/utils/api';
 
 const Register = () => {
     const navigate = useNavigate();
@@ -30,13 +31,11 @@ const Register = () => {
 
     const fetchCaptcha = async () => {
         try {
-            // We can't use the api utility here easily because it might have interceptors or base URL issues if not configured perfectly yet, 
-            // but let's try to use the fetch API directly or the axios instance if available.
-            // Assuming api.js is working correctly.
-            const res = await import('@/utils/api').then(m => m.default.get('/auth/captcha'));
+            const res = await api.get('/auth/captcha');
             setCaptchaData(res.data);
         } catch (err) {
             console.error("Error fetching captcha", err);
+            setError("Impossible de charger le CAPTCHA. Vérifiez votre connexion.");
         }
     };
 
