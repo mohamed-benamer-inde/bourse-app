@@ -132,6 +132,10 @@ router.put('/:id/status', auth, async (req, res) => {
                 });
             }
         }
+        // Student: DRAFT -> SUBMITTED
+        else if (status === 'SUBMITTED' && req.user.role === 'student') {
+            if (request.status !== 'DRAFT' || request.student.toString() !== req.user.id) return res.status(400).json({ message: 'Non autorisé' });
+        }
         else {
             return res.status(400).json({ message: 'Action non autorisée ou statut invalide' });
         }
