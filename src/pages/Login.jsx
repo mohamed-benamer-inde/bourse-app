@@ -22,7 +22,7 @@ const Login = () => {
         if (res.success) {
             if (res.data?.user?.role === 'donor') {
                 navigate('/donor');
-            } else if (res.data?.user?.role === 'admin') {
+            } else if (res.data?.user?.role === 'admin' || res.data?.user?.role === 'superadmin') {
                 navigate('/admin');
             } else {
                 navigate('/student');

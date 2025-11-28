@@ -140,6 +140,7 @@ router.put('/:id/status', auth, async (req, res) => {
 router.post('/:id/documents', auth, async (req, res) => {
     try {
         const { name, url, type } = req.body;
+        console.log(`Adding document to request ${req.params.id}:`, { name, url, type });
         const request = await Request.findById(req.params.id);
 
         if (!request) {
