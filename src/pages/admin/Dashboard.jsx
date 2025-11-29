@@ -7,7 +7,6 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CheckCircle, Shield, UserPlus, Search, Trash2, Edit, FileText, X } from 'lucide-react';
 import { Modal } from '@/components/ui/modal';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import api from '@/utils/api';
 
 const AdminDashboard = () => {
@@ -172,19 +171,18 @@ const AdminDashboard = () => {
                                 onChange={e => setSearchTerm(e.target.value)}
                             />
                         </div>
-                        <Select value={statusFilter} onValueChange={setStatusFilter}>
-                            <SelectTrigger className="w-[180px]">
-                                <SelectValue placeholder="Statut" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="ALL">Tous les statuts</SelectItem>
-                                <SelectItem value="DRAFT">Brouillon</SelectItem>
-                                <SelectItem value="SUBMITTED">Soumis</SelectItem>
-                                <SelectItem value="ANALYZING">En Analyse</SelectItem>
-                                <SelectItem value="VALIDATED">Validé</SelectItem>
-                                <SelectItem value="PAID">Payé</SelectItem>
-                            </SelectContent>
-                        </Select>
+                        <select
+                            className="w-[180px] flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            value={statusFilter}
+                            onChange={e => setStatusFilter(e.target.value)}
+                        >
+                            <option value="ALL">Tous les statuts</option>
+                            <option value="DRAFT">Brouillon</option>
+                            <option value="SUBMITTED">Soumis</option>
+                            <option value="ANALYZING">En Analyse</option>
+                            <option value="VALIDATED">Validé</option>
+                            <option value="PAID">Payé</option>
+                        </select>
                     </div>
 
                     <Card>
@@ -337,14 +335,15 @@ const AdminDashboard = () => {
                         <div><label className="text-sm font-medium">Email</label><Input value={selectedUser.email} onChange={e => setSelectedUser({ ...selectedUser, email: e.target.value })} /></div>
                         <div>
                             <label className="text-sm font-medium">Rôle</label>
-                            <Select value={selectedUser.role} onValueChange={v => setSelectedUser({ ...selectedUser, role: v })}>
-                                <SelectTrigger><SelectValue /></SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="student">Étudiant</SelectItem>
-                                    <SelectItem value="donor">Donateur</SelectItem>
-                                    <SelectItem value="admin">Admin</SelectItem>
-                                </SelectContent>
-                            </Select>
+                            <select
+                                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                value={selectedUser.role}
+                                onChange={e => setSelectedUser({ ...selectedUser, role: e.target.value })}
+                            >
+                                <option value="student">Étudiant</option>
+                                <option value="donor">Donateur</option>
+                                <option value="admin">Admin</option>
+                            </select>
                         </div>
                         <Button onClick={handleUpdateUser} className="w-full">Enregistrer</Button>
                     </div>
