@@ -126,6 +126,21 @@ app.get('/', (req, res) => {
 });
 
 // Start Server
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
+});
+
+// Graceful shutdown
+process.on('SIGINT', async () => {
+    console.log('SIGINT signal received: closing MongoDB connection');
+    await mongoose.connection.close();
+    console.log('MongoDB connection closed.');
+    process.exit(0);
+});
+
+process.on('SIGTERM', async () => {
+    console.log('SIGTERM signal received: closing MongoDB connection');
+    await mongoose.connection.close();
+    console.log('MongoDB connection closed.');
+    process.exit(0);
 });

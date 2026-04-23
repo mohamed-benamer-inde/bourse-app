@@ -8,14 +8,32 @@ import { useData } from '@/context/DataContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Send, Upload, FileText, AlertCircle } from 'lucide-react';
+import { Send, Upload, FileText, AlertCircle, Plus, Trash2 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Modal } from '@/components/ui/modal';
 
 const StudentDashboard = () => {
     const { user } = useAuth();
     const { getStudentRequest, updateRequestStatus, createRequest } = useData();
     const [responseMessage, setResponseMessage] = useState('');
     const [selectedFiles, setSelectedFiles] = useState([]);
+
+    const [isNeedsModalOpen, setIsNeedsModalOpen] = useState(false);
+    const [needs, setNeeds] = useState([{ category: 'Scolarité', amount: '', description: '' }]);
+    const [tempAction, setTempAction] = useState('DRAFT'); // 'DRAFT' or 'SUBMITTED'
+
+    const addNeed = () => setNeeds([...needs, { category: 'Scolarité', amount: '', description: '' }]);
+    const updateNeed = (index, field, value) => {
+        const newNeeds = [...needs];
+        newNeeds[index][field] = value;
+        setNeeds(newNeeds);
+    };
+    const removeNeed = (index) => {
+        const newNeeds = [...needs];
+        newNeeds.splice(index, 1);
+        setNeeds(newNeeds);
+    };
+    const totalNeedsAmount = needs.reduce((sum, n) => sum + (Number(n.amount) || 0), 0);
 
     // Get current student request or create a default one for display
     const myRequest = getStudentRequest(user?.id || user?._id) || { status: 'DRAFT' };
@@ -70,18 +88,19 @@ const StudentDashboard = () => {
 
     const completion = calculateCompletion(user);
 
-    const handleSaveDraft = async (amountFromInput) => {
+    const handleSaveDraft = async () => {
         try {
             if (myRequest._id) {
-                // If already exists, just alert (amount update not implemented yet, but draft is saved)
                 alert("Brouillon sauvegardé.");
             } else {
-                if (amountFromInput) {
-                    const newReq = await createRequest(amountFromInput, 'DRAFT');
-                    if (newReq) alert("Brouillon créé ! Vous pouvez maintenant ajouter des documents.");
-                    else alert("Erreur lors de la création du brouillon.");
+                if (totalNeedsAmount > 0) {
+                    const newReq = await createRequest(totalNeedsAmount, 'DRAFT', needs);
+                    if (newReq) {
+                        alert("Brouillon créé ! Vous pouvez maintenant ajouter des documents.");
+                        setIsNeedsModalOpen(false);
+                    } else alert("Erreur lors de la création du brouillon.");
                 } else {
-                    alert("Veuillez saisir un montant");
+                    alert("Veuillez saisir au moins un besoin financier avec un montant.");
                 }
             }
         } catch (error) {
@@ -89,9 +108,8 @@ const StudentDashboard = () => {
         }
     };
 
-    const handleSubmitRequest = async (amountFromInput) => {
-        // Validation: Check if profile is complete
-        if (completion < 80) { // Example threshold, or check specific fields
+    const handleSubmitRequest = async () => {
+        if (completion < 80) {
             alert("Veuillez compléter votre profil avant de soumettre.");
             return;
         }
@@ -99,21 +117,31 @@ const StudentDashboard = () => {
         try {
             if (myRequest._id) {
                 const success = await updateRequestStatus(myRequest._id, 'SUBMITTED', user?.id || user?._id, user?.name || 'Étudiant');
-                if (success) alert("Dossier soumis avec succès !");
+                if (success) {
+                    alert("Dossier soumis avec succès !");
+                }
                 else alert("Erreur lors de la soumission.");
             } else {
-                if (amountFromInput) {
-                    const success = await createRequest(amountFromInput, 'SUBMITTED');
-                    if (success) alert("Demande créée et soumise !");
+                if (totalNeedsAmount > 0) {
+                    const success = await createRequest(totalNeedsAmount, 'SUBMITTED', needs);
+                    if (success) {
+                        alert("Demande créée et soumise !");
+                        setIsNeedsModalOpen(false);
+                    }
                     else alert("Erreur lors de la création.");
                 } else {
-                    alert("Veuillez saisir un montant");
+                    alert("Veuillez saisir au moins un besoin financier avec un montant.");
                 }
             }
         } catch (error) {
             console.error("Error in handleSubmitRequest", error);
             alert("Une erreur est survenue.");
         }
+    };
+
+    const handleOpenNeedsModal = (action) => {
+        setTempAction(action);
+        setIsNeedsModalOpen(true);
     };
 
     const getStatusBadge = (status) => {
@@ -188,30 +216,29 @@ const StudentDashboard = () => {
                     </div>
                     {(!myRequest.status || myRequest.status === 'DRAFT') && (
                         <div className="flex items-center gap-2">
-                            {!myRequest._id && (
-                                <Input
-                                    type="number"
-                                    placeholder="Montant (DH)"
-                                    className="w-32"
-                                    id="amount-input"
-                                />
+                            {!myRequest._id ? (
+                                <div className="flex gap-2">
+                                    <Button variant="outline" onClick={() => handleOpenNeedsModal('DRAFT')}>
+                                        <FileText className="h-4 w-4 mr-2" />
+                                        Créer un brouillon
+                                    </Button>
+                                    <Button onClick={() => handleOpenNeedsModal('SUBMITTED')}>
+                                        <Send className="h-4 w-4 mr-2" />
+                                        Soumettre
+                                    </Button>
+                                </div>
+                            ) : (
+                                <div className="flex gap-2">
+                                    <Button variant="outline" onClick={handleSaveDraft}>
+                                        <FileText className="h-4 w-4 mr-2" />
+                                        Sauvegarder Brouillon
+                                    </Button>
+                                    <Button onClick={handleSubmitRequest}>
+                                        <Send className="h-4 w-4 mr-2" />
+                                        Soumettre
+                                    </Button>
+                                </div>
                             )}
-                            <Button variant="outline" onClick={() => {
-                                const amountInput = document.getElementById('amount-input');
-                                const amount = amountInput ? amountInput.value : (myRequest.amountNeeded || null);
-                                handleSaveDraft(amount);
-                            }}>
-                                <FileText className="h-4 w-4 mr-2" />
-                                Sauvegarder Brouillon
-                            </Button>
-                            <Button onClick={() => {
-                                const amountInput = document.getElementById('amount-input');
-                                const amount = amountInput ? amountInput.value : (myRequest.amountNeeded || null);
-                                handleSubmitRequest(amount);
-                            }}>
-                                <Send className="h-4 w-4 mr-2" />
-                                Soumettre
-                            </Button>
                         </div>
                     )}
                     {myRequest.status === 'VALIDATED' && (
@@ -359,6 +386,66 @@ const StudentDashboard = () => {
                     </Card>
                 </div>
             </div>
+
+            <Modal isOpen={isNeedsModalOpen} onClose={() => setIsNeedsModalOpen(false)} title="Détaillez vos besoins financiers">
+                <div className="space-y-4">
+                    <p className="text-sm text-muted-foreground">
+                        Aidez les donateurs à comprendre vos besoins en détaillant vos dépenses prévues.
+                    </p>
+                    
+                    <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-2">
+                        {needs.map((need, index) => (
+                            <div key={index} className="flex flex-col gap-2 p-3 bg-gray-50 border rounded-md relative">
+                                <div className="flex gap-2 items-center">
+                                    <select 
+                                        className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                                        value={need.category}
+                                        onChange={(e) => updateNeed(index, 'category', e.target.value)}
+                                    >
+                                        <option value="Scolarité">Frais de scolarité</option>
+                                        <option value="Livres et Matériel">Livres et Matériel</option>
+                                        <option value="Transport">Transport</option>
+                                        <option value="Logement">Logement</option>
+                                        <option value="Autre">Autre</option>
+                                    </select>
+                                    <Input 
+                                        type="number" 
+                                        placeholder="Montant (DH)" 
+                                        value={need.amount}
+                                        onChange={(e) => updateNeed(index, 'amount', e.target.value)}
+                                        className="w-32"
+                                    />
+                                    <Button variant="ghost" size="icon" onClick={() => removeNeed(index)} disabled={needs.length === 1} className="text-red-500 flex-shrink-0">
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                                <Input 
+                                    placeholder={need.category === 'Autre' ? "Précisez la nature de cette dépense (obligatoire pour 'Autre')" : "Description (optionnelle)"} 
+                                    value={need.description}
+                                    onChange={(e) => updateNeed(index, 'description', e.target.value)}
+                                />
+                            </div>
+                        ))}
+                    </div>
+                    
+                    <Button variant="outline" className="w-full border-dashed" onClick={addNeed}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Ajouter une dépense
+                    </Button>
+                    
+                    <div className="flex justify-between items-center pt-4 border-t">
+                        <span className="font-bold">Total estimé :</span>
+                        <span className="text-lg font-bold text-blue-600">{totalNeedsAmount} DH</span>
+                    </div>
+                    
+                    <div className="flex justify-end gap-2 pt-2">
+                        <Button variant="outline" onClick={() => setIsNeedsModalOpen(false)}>Annuler</Button>
+                        <Button onClick={tempAction === 'DRAFT' ? handleSaveDraft : handleSubmitRequest} disabled={totalNeedsAmount === 0 || needs.some(n => n.category === 'Autre' && !n.description?.trim())}>
+                            {tempAction === 'DRAFT' ? 'Créer le brouillon' : 'Soumettre le dossier'}
+                        </Button>
+                    </div>
+                </div>
+            </Modal>
         </div>
     );
 };

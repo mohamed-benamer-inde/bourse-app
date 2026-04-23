@@ -43,6 +43,11 @@ const seedDevData = async () => {
             student: student._id,
             donor: donor._id,
             amountNeeded: 1200,
+            needs: [
+                { category: 'Scolarité', amount: 800 },
+                { category: 'Transport', amount: 300 },
+                { category: 'Autre', amount: 100, description: 'Frais de dossier' }
+            ],
             status: 'INFO_RECEIVED',
             exchanges: [
                 {

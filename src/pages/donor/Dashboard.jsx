@@ -216,6 +216,29 @@ const DonorDashboard = () => {
                             </div>
                         </div>
 
+                        {selectedRequest.needs && selectedRequest.needs.length > 0 && (
+                            <div className="space-y-2">
+                                <h3 className="font-semibold text-lg border-b pb-1">Répartition des Besoins Financiers</h3>
+                                <div className="bg-gray-50 p-3 rounded-md border">
+                                    <ul className="space-y-2">
+                                        {selectedRequest.needs.map((need, idx) => (
+                                            <li key={idx} className="flex justify-between items-center text-sm border-b pb-2 last:border-0 last:pb-0">
+                                                <div className="flex flex-col">
+                                                    <span className="font-medium text-gray-800">{need.category}</span>
+                                                    {need.description && <span className="text-xs text-muted-foreground italic">{need.description}</span>}
+                                                </div>
+                                                <span className="font-bold text-blue-600">{formatCurrency(need.amount)}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                    <div className="flex justify-between items-center mt-3 pt-3 border-t text-sm font-bold">
+                                        <span>Total</span>
+                                        <span>{formatCurrency(selectedRequest.amountNeeded)}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                         <div className="space-y-2">
                             <h3 className="font-semibold text-lg border-b pb-1">Historique des Notes</h3>
                             <div className="grid grid-cols-3 gap-4 text-center">

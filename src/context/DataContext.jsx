@@ -65,9 +65,9 @@ export const DataProvider = ({ children }) => {
         }
     };
 
-    const createRequest = async (amountNeeded, status = 'SUBMITTED') => {
+    const createRequest = async (amountNeeded, status = 'SUBMITTED', needs = []) => {
         try {
-            const res = await api.post('/requests', { amountNeeded, status });
+            const res = await api.post('/requests', { amountNeeded, status, needs });
             setRequests(prev => [...prev, res.data]);
             return res.data;
         } catch (err) {

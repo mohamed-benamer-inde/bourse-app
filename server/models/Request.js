@@ -29,6 +29,21 @@ const requestSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
+    needs: [{
+        category: {
+            type: String,
+            required: true,
+            enum: ['Scolarité', 'Livres et Matériel', 'Transport', 'Logement', 'Autre']
+        },
+        amount: {
+            type: Number,
+            required: true,
+            min: 1
+        },
+        description: {
+            type: String
+        }
+    }],
     documents: [documentSchema],
     exchanges: [{
         date: {
