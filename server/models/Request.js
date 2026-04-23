@@ -35,7 +35,7 @@ const requestSchema = new mongoose.Schema({
             type: Date,
             default: Date.now
         },
-        type: String, // 'MESSAGE' ou 'RESPONSE'
+        type: { type: String }, // 'MESSAGE' ou 'RESPONSE'
         message: String,
         from: String  // 'Donateur' ou 'Étudiant'
     }],

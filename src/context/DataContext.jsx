@@ -53,25 +53,6 @@ export const DataProvider = ({ children }) => {
                     // For demo: if status is REQUEST_INFO, append message to exchanges
                     const updatedReq = { ...req, ...res.data, status: newStatus };
 
-                    if (data && newStatus === 'REQUEST_INFO') {
-                        if (!updatedReq.exchanges) updatedReq.exchanges = [];
-                        updatedReq.exchanges.push({
-                            date: new Date().toISOString(),
-                            type: 'REQUEST',
-                            message: data.message,
-                            from: userName
-                        });
-                    }
-                    if (data && newStatus === 'ANALYZING' && data.response) { // Student responding
-                        if (!updatedReq.exchanges) updatedReq.exchanges = [];
-                        updatedReq.exchanges.push({
-                            date: new Date().toISOString(),
-                            type: 'RESPONSE',
-                            message: data.response,
-                            attachments: data.attachments || [],
-                            from: userName
-                        });
-                    }
 
                     return updatedReq;
                 }
