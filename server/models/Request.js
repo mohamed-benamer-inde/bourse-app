@@ -22,7 +22,7 @@ const requestSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['DRAFT', 'SUBMITTED', 'ANALYZING', 'REQUEST_INFO', 'VALIDATED', 'ACCEPTED', 'PAID', 'CONFIRMED'],
+        enum: ['DRAFT', 'SUBMITTED', 'ANALYZING', 'REQUEST_INFO', 'INFO_RECEIVED', 'VALIDATED', 'ACCEPTED', 'PAID', 'CONFIRMED'],
         default: 'DRAFT'
     },
     amountNeeded: {
@@ -30,6 +30,15 @@ const requestSchema = new mongoose.Schema({
         required: true
     },
     documents: [documentSchema],
+    exchanges: [{
+        date: {
+            type: Date,
+            default: Date.now
+        },
+        type: String, // 'MESSAGE' ou 'RESPONSE'
+        message: String,
+        from: String  // 'Donateur' ou 'Étudiant'
+    }],
     history: [{
         date: {
             type: Date,

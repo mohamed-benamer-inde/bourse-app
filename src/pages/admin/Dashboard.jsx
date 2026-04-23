@@ -380,6 +380,19 @@ const AdminDashboard = () => {
                                 </ul>
                             ) : <p className="text-sm text-muted-foreground">Aucun document.</p>}
                         </div>
+                        {selectedRequest.exchanges && selectedRequest.exchanges.length > 0 && (
+                            <div className="space-y-2">
+                                <h3 className="font-medium border-b pb-1 text-red-600">Historique des Échanges (Modération)</h3>
+                                <div className="space-y-2 max-h-[150px] overflow-y-auto bg-gray-50 p-2 rounded border">
+                                    {selectedRequest.exchanges.map((ex, idx) => (
+                                        <div key={idx} className="text-xs">
+                                            <span className="font-bold">{ex.from}</span> <span className="text-muted-foreground mr-2">({new Date(ex.date).toLocaleString()})</span>: 
+                                            <span className="italic ml-1">{ex.message}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
             </Modal>

@@ -40,7 +40,7 @@ const StudentDashboard = () => {
 
         await updateRequestStatus(
             myRequest._id,
-            'ANALYZING',
+            'INFO_RECEIVED',
             user?.id || user?._id,
             user?.name,
             {
@@ -122,6 +122,7 @@ const StudentDashboard = () => {
             case 'SUBMITTED': return <Badge className="bg-blue-500">Soumis</Badge>;
             case 'ANALYZING': return <Badge className="bg-yellow-500">En Analyse</Badge>;
             case 'REQUEST_INFO': return <Badge className="bg-orange-500">Info Demandée</Badge>;
+            case 'INFO_RECEIVED': return <Badge className="bg-blue-600">Réponse envoyée</Badge>;
             case 'VALIDATED': return <Badge className="bg-purple-500">Validé</Badge>;
             case 'ACCEPTED': return <Badge className="bg-green-500">Accepté</Badge>;
             case 'PAID': return <Badge className="bg-green-700">Payé</Badge>;
@@ -247,8 +248,11 @@ const StudentDashboard = () => {
                                     value={responseMessage}
                                     onChange={(e) => setResponseMessage(e.target.value)}
                                 />
+                                <p className="text-xs text-red-600 font-medium mt-1">
+                                    ⚠️ Attention : Cet espace est strictement réservé pour répondre à la demande du donateur. Tout abus, demande d'argent directe, ou hors-sujet entraînera la suspension de votre compte.
+                                </p>
 
-                                <Button onClick={handleSubmitResponse} disabled={!responseMessage.trim()} className="w-full sm:w-auto">
+                                <Button onClick={handleSubmitResponse} disabled={!responseMessage.trim()} className="w-full sm:w-auto mt-2">
                                     <Send className="h-4 w-4 mr-2" />
                                     Envoyer la réponse
                                 </Button>

@@ -46,6 +46,7 @@ const DonorDashboard = () => {
             case 'SUBMITTED': return <Badge className="bg-blue-500">Nouveau</Badge>;
             case 'ANALYZING': return <Badge className="bg-yellow-500">En Analyse</Badge>;
             case 'REQUEST_INFO': return <Badge className="bg-orange-500">Info Demandée</Badge>;
+            case 'INFO_RECEIVED': return <Badge className="bg-blue-600 animate-pulse">Réponse reçue</Badge>;
             case 'VALIDATED': return <Badge className="bg-purple-500">Validé</Badge>;
             case 'ACCEPTED': return <Badge className="bg-green-500">Accepté par l'étudiant</Badge>;
             case 'PAID': return <Badge className="bg-green-700">Payé</Badge>;
@@ -117,8 +118,13 @@ const DonorDashboard = () => {
                                 </Button>
                             )}
 
-                            {req.status === 'ANALYZING' && (
+                            {(req.status === 'ANALYZING' || req.status === 'INFO_RECEIVED') && (
                                 <div className="flex flex-col gap-2 w-full">
+                                    {req.status === 'INFO_RECEIVED' && (
+                                        <div className="bg-blue-50 text-blue-700 text-xs p-1.5 rounded text-center border border-blue-200 font-medium">
+                                            L'étudiant a répondu
+                                        </div>
+                                    )}
                                     <div className="flex gap-2 w-full">
                                         <Button variant="outline" className="flex-1" onClick={() => updateRequestStatus(req._id, 'SUBMITTED', null, user?.name)}>
                                             Relâcher
@@ -127,10 +133,17 @@ const DonorDashboard = () => {
                                             Demander infos
                                         </Button>
                                     </div>
-                                    <Button className="w-full bg-purple-600 hover:bg-purple-700" onClick={() => updateRequestStatus(req._id, 'VALIDATED', user?._id, user?.name)}>
-                                        <CheckCircle className="h-4 w-4 mr-2" />
-                                        Valider
-                                    </Button>
+                                    {req.status === 'INFO_RECEIVED' ? (
+                                        <Button className="w-full bg-blue-600 hover:bg-blue-700" onClick={() => updateRequestStatus(req._id, 'ANALYZING', user?._id, user?.name)}>
+                                            <Eye className="h-4 w-4 mr-2" />
+                                            Reprendre l'analyse
+                                        </Button>
+                                    ) : (
+                                        <Button className="w-full bg-purple-600 hover:bg-purple-700" onClick={() => updateRequestStatus(req._id, 'VALIDATED', user?._id, user?.name)}>
+                                            <CheckCircle className="h-4 w-4 mr-2" />
+                                            Valider
+                                        </Button>
+                                    )}
                                 </div>
                             )}
 
@@ -221,6 +234,22 @@ const DonorDashboard = () => {
                             </div>
                         </div>
 
+                        {selectedRequest.exchanges && selectedRequest.exchanges.length > 0 && (
+                            <div className="space-y-2">
+                                <h3 className="font-semibold text-lg border-b pb-1">Échanges / Précisions</h3>
+                                <div className="space-y-3 max-h-[200px] overflow-y-auto bg-gray-50 p-3 rounded-md border">
+                                    {selectedRequest.exchanges.map((ex, idx) => (
+                                        <div key={idx} className={`flex flex-col ${ex.from === 'Donateur' ? 'items-end' : 'items-start'}`}>
+                                            <div className={`text-[10px] text-muted-foreground mb-1`}>{ex.from} - {new Date(ex.date).toLocaleString()}</div>
+                                            <div className={`p-2 rounded-lg text-sm max-w-[85%] ${ex.from === 'Donateur' ? 'bg-blue-100 text-blue-900 rounded-tr-none' : 'bg-white border text-gray-800 rounded-tl-none'}`}>
+                                                {ex.message}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
                         <div className="space-y-2">
                             <h3 className="font-semibold text-lg border-b pb-1">Documents ({selectedRequest.documents?.length || 0})</h3>
                             {selectedRequest.documents && selectedRequest.documents.length > 0 ? (
@@ -256,6 +285,9 @@ const DonorDashboard = () => {
                 <div className="space-y-4">
                     <p className="text-sm text-muted-foreground">
                         Précisez les informations ou documents manquants que vous souhaitez demander à l'étudiant.
+                    </p>
+                    <p className="text-xs text-orange-600 font-medium">
+                        ⚠️ Ce messagerie sert uniquement à réclamer des pièces au dossier. Tout hors-sujet est formellement interdit et surveillé par l'administration.
                     </p>
                     <Textarea
                         placeholder="Ex: Il manque le relevé de notes de l'année N-1..."

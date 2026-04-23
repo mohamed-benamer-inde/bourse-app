@@ -73,13 +73,22 @@ router.put('/:id/status', auth, async (req, res) => {
             if (request.status !== 'SUBMITTED') return res.status(400).json({ message: 'Transition invalide' });
             request.donor = req.user.id;
         }
-        // Donor: ANALYZING -> REQUEST_INFO
+        // Donor: ANALYZING/INFO_RECEIVED -> REQUEST_INFO
         else if (status === 'REQUEST_INFO' && req.user.role === 'donor') {
-            if (request.status !== 'ANALYZING' || request.donor.toString() !== req.user.id) return res.status(400).json({ message: 'Non autorisé' });
+            if ((request.status !== 'ANALYZING' && request.status !== 'INFO_RECEIVED') || request.donor.toString() !== req.user.id) return res.status(400).json({ message: 'Non autorisé' });
+            
+            if (req.body.data && req.body.data.message) {
+                if (!request.exchanges) request.exchanges = [];
+                request.exchanges.push({
+                    type: 'MESSAGE',
+                    message: req.body.data.message,
+                    from: 'Donateur'
+                });
+            }
         }
-        // Donor: ANALYZING -> VALIDATED
+        // Donor: ANALYZING/INFO_RECEIVED -> VALIDATED
         else if (status === 'VALIDATED' && req.user.role === 'donor') {
-            if (request.status !== 'ANALYZING' || request.donor.toString() !== req.user.id) return res.status(400).json({ message: 'Non autorisé' });
+            if ((request.status !== 'ANALYZING' && request.status !== 'INFO_RECEIVED') || request.donor.toString() !== req.user.id) return res.status(400).json({ message: 'Non autorisé' });
         }
         // Student: VALIDATED -> ACCEPTED
         else if (status === 'ACCEPTED' && req.user.role === 'student') {
@@ -117,20 +126,25 @@ router.put('/:id/status', auth, async (req, res) => {
             if (request.status !== 'ANALYZING' || request.donor.toString() !== req.user.id) return res.status(400).json({ message: 'Non autorisé' });
             request.donor = null;
         }
-        // Student: REQUEST_INFO -> ANALYZING (Response)
-        else if (status === 'ANALYZING' && req.user.role === 'student') {
+        // Student: REQUEST_INFO -> INFO_RECEIVED (Response)
+        else if (status === 'INFO_RECEIVED' && req.user.role === 'student') {
             if (request.status !== 'REQUEST_INFO' || request.student.toString() !== req.user.id) return res.status(400).json({ message: 'Non autorisé' });
 
             // Add response to exchanges
             if (req.body.data && req.body.data.response) {
                 if (!request.exchanges) request.exchanges = [];
                 request.exchanges.push({
-                    date: new Date(),
                     type: 'RESPONSE',
                     message: req.body.data.response,
                     from: 'Étudiant'
                 });
             }
+        }
+        // Donor: INFO_RECEIVED -> ANALYZING (Reprendre l'analyse)
+        else if (status === 'ANALYZING' && req.user.role === 'donor') {
+            if (request.status !== 'INFO_RECEIVED' && request.status !== 'SUBMITTED') return res.status(400).json({ message: 'Non autorisé' });
+            if (request.status === 'INFO_RECEIVED' && request.donor.toString() !== req.user.id) return res.status(400).json({ message: 'Non autorisé' });
+            if (request.status === 'SUBMITTED') request.donor = req.user.id;
         }
         // Student: DRAFT -> SUBMITTED
         else if (status === 'SUBMITTED' && req.user.role === 'student') {
