@@ -68,10 +68,21 @@ router.put('/:id/status', auth, async (req, res) => {
         }
 
         // Logic for status transitions
-        // Donor: SUBMITTED -> ANALYZING
+        // Donor: SUBMITTED or INFO_RECEIVED -> ANALYZING (Take charge or Resume)
         if (status === 'ANALYZING' && req.user.role === 'donor') {
-            if (request.status !== 'SUBMITTED') return res.status(400).json({ message: 'Transition invalide' });
-            request.donor = req.user.id;
+            const validSourceStatuses = ['SUBMITTED', 'INFO_RECEIVED'];
+            if (!validSourceStatuses.includes(request.status)) {
+                return res.status(400).json({ message: 'Transition invalide' });
+            }
+
+            // If resuming from INFO_RECEIVED, ensure it's the same donor
+            if (request.status === 'INFO_RECEIVED' && request.donor.toString() !== req.user.id) {
+                return res.status(401).json({ message: 'Non autorisé' });
+            }
+
+            if (request.status === 'SUBMITTED') {
+                request.donor = req.user.id;
+            }
         }
         // Donor: ANALYZING/INFO_RECEIVED -> REQUEST_INFO
         else if (status === 'REQUEST_INFO' && req.user.role === 'donor') {
@@ -139,12 +150,6 @@ router.put('/:id/status', auth, async (req, res) => {
                     from: 'Étudiant'
                 });
             }
-        }
-        // Donor: INFO_RECEIVED -> ANALYZING (Reprendre l'analyse)
-        else if (status === 'ANALYZING' && req.user.role === 'donor') {
-            if (request.status !== 'INFO_RECEIVED' && request.status !== 'SUBMITTED') return res.status(400).json({ message: 'Non autorisé' });
-            if (request.status === 'INFO_RECEIVED' && request.donor.toString() !== req.user.id) return res.status(400).json({ message: 'Non autorisé' });
-            if (request.status === 'SUBMITTED') request.donor = req.user.id;
         }
         // Student: DRAFT -> SUBMITTED
         else if (status === 'SUBMITTED' && req.user.role === 'student') {

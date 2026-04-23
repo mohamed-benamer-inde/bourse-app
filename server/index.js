@@ -80,6 +80,10 @@ const connectDB = async () => {
             const uri = mongod.getUri();
             await mongoose.connect(uri);
             console.log('Connected to In-Memory MongoDB');
+            
+            // Seed development data
+            const seedDevData = require('./utils/devSeeder');
+            await seedDevData();
         } catch (memoryErr) {
             console.error('Could not start in-memory database:', memoryErr);
             console.error('Original error:', err);
