@@ -113,7 +113,7 @@ router.get('/requests', auth, adminAuth, async (req, res) => {
         }
 
         const requests = await require('../models/Request').find(query)
-            .populate('student', 'name email phone rsuScore gradeCurrent')
+            .populate('student', 'name email phone rsuTranche gradeCurrent')
             .populate('donor', 'name email')
             .sort({ createdAt: -1 });
 
@@ -194,7 +194,7 @@ router.delete('/requests/:id/documents/:docId', auth, adminAuth, async (req, res
 // Edit user info
 router.put('/users/:id', auth, adminAuth, async (req, res) => {
     try {
-        const { name, email, role, isValidated, phone, rsuScore } = req.body;
+        const { name, email, role, isValidated, phone, rsuTranche } = req.body;
 
         // Prevent changing own role to something else if it blocks admin access? 
         // Or preventing editing superadmin?
@@ -211,7 +211,7 @@ router.put('/users/:id', auth, adminAuth, async (req, res) => {
         if (role) user.role = role;
         if (isValidated !== undefined) user.isValidated = isValidated;
         if (phone) user.phone = phone;
-        if (rsuScore) user.rsuScore = rsuScore;
+        if (rsuTranche) user.rsuTranche = rsuTranche;
 
         await user.save();
         res.json(user);

@@ -55,7 +55,7 @@ const StudentDashboard = () => {
 
     const calculateCompletion = (user) => {
         if (!user) return 0;
-        const fields = ['name', 'email', 'address', 'phone', 'educationLevel', 'studyField', 'rsuScore', 'resources', 'description', 'gradeCurrent'];
+        const fields = ['name', 'email', 'address', 'phone', 'educationLevel', 'studyField', 'rsuTranche', 'resources', 'description', 'gradeCurrent'];
         const filled = fields.filter(field => user[field] && user[field].toString().trim() !== '');
         // Base score on data fields (80% weight)
         let score = (filled.length / fields.length) * 80;

@@ -5,6 +5,10 @@ const User = require('./models/User');
 
 const seedSuperAdmin = async () => {
     try {
+        if (!process.env.MONGODB_URI) {
+            console.warn('⚠️ No MONGODB_URI found in env. Skipping standalone seed.js (In-memory DB will be empty initially).');
+            return process.exit(0);
+        }
         await mongoose.connect(process.env.MONGODB_URI);
         console.log('MongoDB Connected');
 

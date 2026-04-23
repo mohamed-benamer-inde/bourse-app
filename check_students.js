@@ -10,7 +10,7 @@ const checkStudents = async () => {
         const students = await User.find({ role: 'student' })
             .sort({ createdAt: -1 })
             .limit(5)
-            .select('name email role isValidated transcriptStatus phone address rsuScore');
+            .select('name email role isValidated transcriptStatus phone address rsuTranche');
 
         console.log('--- DERNIERS ÉTUDIANTS INSCRITS ---');
         students.forEach(s => {
@@ -20,7 +20,7 @@ const checkStudents = async () => {
             console.log(`Validé: ${s.isValidated}`);
             console.log(`Statut Relevé: ${s.transcriptStatus}`);
             console.log(`Téléphone: ${s.phone || 'NON DÉFINI'}`);
-            console.log(`Score RSU: ${s.rsuScore || 'NON DÉFINI'}`);
+            console.log(`Tranche RSU: ${s.rsuTranche || 'NON DÉFINI'}`);
             console.log('-----------------------------------');
         });
 

@@ -93,9 +93,9 @@ const DonorDashboard = () => {
                                     <DollarSign className="h-4 w-4 mr-1" />
                                     Besoin : {formatCurrency(req.amountNeeded)}
                                 </div>
-                                {req.student?.rsuScore && (
-                                    <div className="text-muted-foreground">
-                                        Score RSU : <span className="font-medium text-foreground">{req.student.rsuScore}</span>
+                                {req.student?.rsuTranche && (
+                                    <div className="text-sm text-muted-foreground">
+                                        Catégorie RSU : <span className="font-medium text-foreground">{req.student.rsuTranche}</span>
                                     </div>
                                 )}
                                 {req.student?.gradeCurrent && (
@@ -187,8 +187,8 @@ const DonorDashboard = () => {
                             <h3 className="font-semibold text-lg border-b pb-1">Situation Sociale</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                                 <div>
-                                    <span className="text-muted-foreground">Score RSU :</span>
-                                    <span className="ml-2 font-bold">{selectedRequest.student.rsuScore}</span>
+                                    <span className="text-muted-foreground">Catégorie RSU :</span>
+                                    <span className="ml-2 font-bold">{selectedRequest.student.rsuTranche}</span>
                                 </div>
                                 <div>
                                     <span className="text-muted-foreground">Ressources Mensuelles :</span>

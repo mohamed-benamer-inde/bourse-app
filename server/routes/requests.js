@@ -34,7 +34,7 @@ router.post('/', auth, async (req, res) => {
 router.get('/', auth, async (req, res) => {
     try {
         if (req.user.role === 'student') {
-            const request = await Request.findOne({ student: req.user.id }).populate('student', 'name studies description rsuScore gradeCurrent');
+            const request = await Request.findOne({ student: req.user.id }).populate('student', 'name studies description rsuTranche gradeCurrent');
             if (!request) return res.json(null);
             return res.json([request]);
         } else if (req.user.role === 'donor') {
@@ -44,7 +44,7 @@ router.get('/', auth, async (req, res) => {
                     { status: 'SUBMITTED' },
                     { donor: req.user.id }
                 ]
-            }).populate('student', 'name email phone address educationLevel studyField rsuScore resources description gradeCurrent gradeN1 gradeN2 gradeN3 transcriptStatus');
+            }).populate('student', 'name email phone address educationLevel studyField rsuTranche resources description gradeCurrent gradeN1 gradeN2 gradeN3 transcriptStatus');
             res.json(requests);
         } else {
             // Admin sees all

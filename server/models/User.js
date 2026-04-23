@@ -30,7 +30,16 @@ const userSchema = new mongoose.Schema({
     phone: String,
     educationLevel: String,
     studyField: String,
-    rsuScore: Number,
+    rsuTranche: {
+        type: String,
+        enum: [
+            'Tranche 1 (Moins de 9.32)',
+            'Tranche 2 (Entre 9.32 et 9.74)',
+            'Tranche 3 (Entre 9.74 et 10.50)',
+            'Tranche 4 (Supérieur à 10.50)',
+            'Non inscrit / En cours'
+        ]
+    },
     resources: Number,
     description: String,
     gradeCurrent: String,

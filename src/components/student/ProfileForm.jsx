@@ -16,7 +16,7 @@ const ProfileForm = () => {
         phone: '',
         educationLevel: '',
         studyField: '',
-        rsuScore: '',
+        rsuTranche: '',
         resources: '',
         description: '',
         gradeCurrent: '',
@@ -37,7 +37,7 @@ const ProfileForm = () => {
                 phone: user.phone || '',
                 educationLevel: user.educationLevel || '',
                 studyField: user.studyField || '',
-                rsuScore: user.rsuScore || '',
+                rsuTranche: user.rsuTranche || '',
                 resources: user.resources || '',
                 description: user.description || '',
                 gradeCurrent: user.gradeCurrent || '',
@@ -165,8 +165,21 @@ const ProfileForm = () => {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
-                            <label className="text-sm font-medium">Score RSU</label>
-                            <Input name="rsuScore" type="number" step="0.01" value={formData.rsuScore} onChange={handleChange} placeholder="Ex: 9.50" required />
+                            <label className="text-sm font-medium">Tranche RSU</label>
+                            <select
+                                name="rsuTranche"
+                                value={formData.rsuTranche}
+                                onChange={handleChange}
+                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                                required
+                            >
+                                <option value="">Sélectionner votre tranche RSU</option>
+                                <option value="Tranche 1 (Moins de 9.32)">Tranche 1 (Moins de 9.32)</option>
+                                <option value="Tranche 2 (Entre 9.32 et 9.74)">Tranche 2 (Entre 9.32 et 9.74)</option>
+                                <option value="Tranche 3 (Entre 9.74 et 10.50)">Tranche 3 (Entre 9.74 et 10.50)</option>
+                                <option value="Tranche 4 (Supérieur à 10.50)">Tranche 4 (Supérieur à 10.50)</option>
+                                <option value="Non inscrit / En cours">Non inscrit / En cours</option>
+                            </select>
                         </div>
                         <div className="space-y-2">
                             <label className="text-sm font-medium">Ressources Mensuelles ({APP_CONFIG.currency.code})</label>
