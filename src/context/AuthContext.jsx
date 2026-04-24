@@ -9,17 +9,15 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const loadUser = async () => {
-      const token = localStorage.getItem('token');
-      if (token) {
-        try {
-          const profileRes = await api.get('/profile');
-          setUser(profileRes.data);
-        } catch (err) {
-          console.error("Error loading user", err);
-          localStorage.removeItem('token');
-        }
+      try {
+        const profileRes = await api.get('/profile');
+        setUser(profileRes.data);
+      } catch (err) {
+        // Error here likely means no valid cookie, user is not logged in.
+        setUser(null);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
     loadUser();
   }, []);
@@ -27,7 +25,7 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       const res = await api.post('/auth/login', { email, password });
-      localStorage.setItem('token', res.data.token);
+      // Token is now set in httpOnly cookie by backend
       setUser(res.data.user);
       return { success: true, data: res.data };
     } catch (err) {
@@ -45,7 +43,7 @@ export const AuthProvider = ({ children }) => {
         return { success: true };
       }
 
-      localStorage.setItem('token', res.data.token);
+      // Token is now set in httpOnly cookie by backend
       setUser(res.data.user);
       return { success: true };
     } catch (err) {
@@ -54,9 +52,14 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem('token');
-    setUser(null);
+  const logout = async () => {
+    try {
+      await api.post('/auth/logout');
+    } catch (err) {
+      console.error("Logout error", err);
+    } finally {
+      setUser(null);
+    }
   };
 
   const updateProfile = (data) => {

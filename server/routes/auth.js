@@ -85,7 +85,16 @@ router.post('/register', async (req, res) => {
             { expiresIn: '24h' },
             (err, token) => {
                 if (err) throw err;
-                res.json({ token, user: { id: user.id, name: user.name, role: user.role, email: user.email } });
+                
+                // Set httpOnly cookie
+                res.cookie('token', token, {
+                    httpOnly: true,
+                    secure: process.env.NODE_ENV === 'production',
+                    sameSite: 'strict',
+                    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+                });
+
+                res.json({ user: { id: user.id, name: user.name, role: user.role, email: user.email } });
             }
         );
 
@@ -106,11 +115,30 @@ router.post('/login', async (req, res) => {
             return res.status(400).json({ message: 'Identifiants invalides' });
         }
 
+        // Check if account is locked
+        if (user.lockUntil && user.lockUntil > Date.now()) {
+            return res.status(403).json({ message: 'Compte verrouillé suite à trop de tentatives. Réessayez dans 15 minutes.' });
+        }
+
         // Check password
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
+            // Increment login attempts
+            user.loginAttempts += 1;
+            
+            // Lock account if >= 5 attempts
+            if (user.loginAttempts >= 5) {
+                user.lockUntil = Date.now() + 15 * 60 * 1000; // Lock for 15 minutes
+            }
+            await user.save();
+            
             return res.status(400).json({ message: 'Identifiants invalides' });
         }
+
+        // Reset login attempts and lock on successful login
+        user.loginAttempts = 0;
+        user.lockUntil = undefined;
+        await user.save();
 
         // Check validation for donors
         if (user.role === 'donor' && !user.isValidated) {
@@ -131,7 +159,16 @@ router.post('/login', async (req, res) => {
             { expiresIn: '24h' },
             (err, token) => {
                 if (err) throw err;
-                res.json({ token, user: { id: user.id, name: user.name, role: user.role, email: user.email, ...user._doc } });
+                
+                // Set httpOnly cookie
+                res.cookie('token', token, {
+                    httpOnly: true,
+                    secure: process.env.NODE_ENV === 'production',
+                    sameSite: 'strict',
+                    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+                });
+
+                res.json({ user: { id: user.id, name: user.name, role: user.role, email: user.email, ...user._doc } });
             }
         );
 
@@ -139,6 +176,12 @@ router.post('/login', async (req, res) => {
         console.error(err.message);
         res.status(500).send('Erreur serveur');
     }
+});
+
+// Logout
+router.post('/logout', (req, res) => {
+    res.clearCookie('token');
+    res.json({ message: 'Déconnexion réussie' });
 });
 
 // Forgot Password

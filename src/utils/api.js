@@ -19,21 +19,12 @@ const api = axios.create({
     timeout: 30000, // 30 seconds timeout for Render cold starts
     headers: {
         'Content-Type': 'application/json'
-    }
+    },
+    withCredentials: true // Important for sending/receiving httpOnly cookies
 });
 
 console.log('API Base URL configured as:', getBaseUrl());
 
-// Interceptor to add token to requests
-api.interceptors.request.use(
-    config => {
-        const token = localStorage.getItem('token');
-        if (token) {
-            config.headers['x-auth-token'] = token;
-        }
-        return config;
-    },
-    error => Promise.reject(error)
-);
+// Removed manual token interceptor as we now use httpOnly cookies
 
 export default api;
