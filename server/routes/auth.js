@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const svgCaptcha = require('svg-captcha');
 const crypto = require('crypto');
+const sendEmail = require('../utils/sendEmail');
 
 // CAPTCHA Secret (should be in env, but using a default for now)
 const CAPTCHA_SECRET = process.env.CAPTCHA_SECRET || 'secure_captcha_secret_key';
@@ -134,6 +135,87 @@ router.post('/login', async (req, res) => {
             }
         );
 
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Erreur serveur');
+    }
+});
+
+// Forgot Password
+router.post('/forgot-password', async (req, res) => {
+    try {
+        const { email } = req.body;
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return res.status(404).json({ message: "Il n'y a pas d'utilisateur avec cette adresse email" });
+        }
+
+        // Generate token
+        const resetToken = crypto.randomBytes(20).toString('hex');
+
+        // Hash token and set to resetPasswordToken field
+        user.resetPasswordToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+        
+        // Set expire (1 hour)
+        user.resetPasswordExpire = Date.now() + 60 * 60 * 1000;
+
+        await user.save();
+
+        // Create reset url
+        const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password/${resetToken}`;
+
+        const message = `
+            <h1>Vous avez demandé une réinitialisation de mot de passe</h1>
+            <p>Veuillez vous rendre sur ce lien pour réinitialiser votre mot de passe:</p>
+            <a href=${resetUrl} clicktracking=off>${resetUrl}</a>
+        `;
+
+        try {
+            await sendEmail({
+                email: user.email,
+                subject: 'Réinitialisation de mot de passe',
+                message
+            });
+
+            res.status(200).json({ message: 'Email envoyé' });
+        } catch (err) {
+            console.error(err);
+            user.resetPasswordToken = undefined;
+            user.resetPasswordExpire = undefined;
+            await user.save();
+            return res.status(500).json({ message: "L'email n'a pas pu être envoyé" });
+        }
+
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Erreur serveur');
+    }
+});
+
+// Reset Password
+router.put('/reset-password/:token', async (req, res) => {
+    try {
+        // Get hashed token
+        const resetPasswordToken = crypto.createHash('sha256').update(req.params.token).digest('hex');
+
+        const user = await User.findOne({
+            resetPasswordToken,
+            resetPasswordExpire: { $gt: Date.now() }
+        });
+
+        if (!user) {
+            return res.status(400).json({ message: 'Jeton invalide ou expiré' });
+        }
+
+        // Set new password
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(req.body.password, salt);
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpire = undefined;
+        await user.save();
+
+        res.status(200).json({ message: 'Mot de passe mis à jour avec succès' });
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Erreur serveur');

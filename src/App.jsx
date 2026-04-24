@@ -6,6 +6,8 @@ import Layout from './components/Layout';
 import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import StudentDashboard from './pages/student/Dashboard';
 import DonorDashboard from './pages/donor/Dashboard';
 import AdminDashboard from './pages/admin/Dashboard';
@@ -19,6 +21,8 @@ function App() {
                         <Route path="/" element={<Layout><Landing /></Layout>} />
                         <Route path="/login" element={<Layout><Login /></Layout>} />
                         <Route path="/register" element={<Layout><Register /></Layout>} />
+                        <Route path="/forgot-password" element={<Layout><ForgotPassword /></Layout>} />
+                        <Route path="/reset-password/:token" element={<Layout><ResetPassword /></Layout>} />
 
                         {/* Protected Routes (Mock) */}
                         <Route path="/student" element={<Layout><StudentDashboard /></Layout>} />

@@ -1,9 +1,23 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { GraduationCap } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import useIdleTimeout from '@/hooks/useIdleTimeout';
 
 const Layout = ({ children }) => {
+    const { user, logout } = useAuth();
+    const navigate = useNavigate();
+
+    const handleIdle = () => {
+        if (user) {
+            logout();
+            navigate('/login', { state: { message: "Vous avez été déconnecté pour inactivité." } });
+        }
+    };
+
+    useIdleTimeout(handleIdle, 15 * 60 * 1000); // 15 minutes
+
     return (
         <div className="min-h-screen flex flex-col font-sans text-slate-900">
             <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">

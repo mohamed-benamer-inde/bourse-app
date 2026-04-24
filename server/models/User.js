@@ -51,6 +51,8 @@ const userSchema = new mongoose.Schema({
         enum: ['none', 'analyzing', 'valid', 'invalid'],
         default: 'none'
     },
+    resetPasswordToken: String,
+    resetPasswordExpire: Date,
     createdAt: {
         type: Date,
         default: Date.now
