@@ -136,14 +136,21 @@ const StudentOnboarding = () => {
         setError('');
         try {
             // 1. Update Profile
-            const profileRes = await api.put('/profile', profileData);
+            // Clean empty numeric fields
+            const cleanProfileData = { ...profileData };
+            if (cleanProfileData.resources === '') delete cleanProfileData.resources;
+
+            const profileRes = await api.put('/profile', cleanProfileData);
             setUser(profileRes.data);
+
+            // Filter out empty needs
+            const validNeeds = needs.filter(n => Number(n.amount) > 0);
 
             // 2. Create Request with needs and documents
             const reqRes = await api.post('/requests', {
-                amountNeeded: totalNeedsAmount,
+                amountNeeded: validNeeds.reduce((sum, n) => sum + Number(n.amount), 0),
                 status: 'SUBMITTED',
-                needs: needs,
+                needs: validNeeds,
                 documents: documents
             });
 
