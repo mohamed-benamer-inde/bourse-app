@@ -8,7 +8,7 @@ import { useData } from '@/context/DataContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Send, Upload, FileText, AlertCircle, CheckCircle, Clock, Search, ShieldCheck } from 'lucide-react';
+import { Send, Upload, FileText, AlertCircle, CheckCircle, Clock, Search, ShieldCheck, Trash2 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { motion } from 'framer-motion';
 
@@ -25,8 +25,8 @@ const StudentDashboard = () => {
 
     useEffect(() => {
         if (!dataLoading) {
-            // If the student doesn't have a valid request, redirect to onboarding wizard
-            if (!myRequest || !myRequest._id) {
+            // If the student doesn't have a valid request (or it's a DRAFT), redirect to onboarding wizard
+            if (!myRequest || !myRequest._id || myRequest.status === 'DRAFT') {
                 navigate('/student/onboarding');
             }
         }
@@ -48,6 +48,27 @@ const StudentDashboard = () => {
         );
 
         setResponseMessage('');
+    };
+
+    const handleDeleteDocument = async (docId) => {
+        if (!window.confirm("Êtes-vous sûr de vouloir supprimer ce document ?")) return;
+        try {
+            await api.delete(`/requests/${myRequest._id}/documents/${docId}`);
+            // Update context state
+            const updatedRequests = requests.map(r => {
+                if (r._id === myRequest._id) {
+                    return { ...r, documents: r.documents.filter(d => d._id !== docId) };
+                }
+                return r;
+            });
+            // We need useData's setRequests to update globally, but we don't have it exported.
+            // Alternatively, we can just fetch the single request again, or reload cleanly.
+            // A clean reload is acceptable if we don't redirect on REQUEST_INFO.
+            window.location.reload();
+        } catch (err) {
+            console.error("Error deleting document", err);
+            alert("Erreur lors de la suppression.");
+        }
     };
 
     const handleAddDocument = async (e) => {
@@ -78,7 +99,7 @@ const StudentDashboard = () => {
                 type: file.type
             });
 
-            alert("Document ajouté avec succès !");
+            alert("Document ajouté avec succès !\n\nN'oubliez pas d'envoyer un message au donateur (bouton 'Envoyer ma réponse') pour qu'il soit notifié de cet ajout.");
             window.location.reload(); // Refresh to get updated request data
         } catch (err) {
             console.error("Error adding document", err);
@@ -258,11 +279,18 @@ const StudentDashboard = () => {
                                 <ul className="space-y-2">
                                     {myRequest.documents.map((doc, idx) => (
                                         <li key={idx} className="flex flex-col p-3 border rounded-lg bg-gray-50 hover:bg-blue-50 transition-colors">
-                                            <div className="flex items-center gap-2 overflow-hidden mb-1">
-                                                <FileText className="h-4 w-4 text-blue-500 flex-shrink-0" />
-                                                <a href={doc.url.startsWith('http') ? doc.url : `${api.defaults.baseURL.replace('/api', '')}${doc.url}`} target="_blank" rel="noopener noreferrer" className="text-sm font-medium hover:text-blue-600 truncate">
-                                                    {doc.name}
-                                                </a>
+                                            <div className="flex items-center justify-between gap-2 overflow-hidden mb-1">
+                                                <div className="flex items-center gap-2 overflow-hidden">
+                                                    <FileText className="h-4 w-4 text-blue-500 flex-shrink-0" />
+                                                    <a href={doc.url.startsWith('http') ? doc.url : `${api.defaults.baseURL.replace('/api', '')}${doc.url}`} target="_blank" rel="noopener noreferrer" className="text-sm font-medium hover:text-blue-600 truncate">
+                                                        {doc.name}
+                                                    </a>
+                                                </div>
+                                                {myRequest.status === 'REQUEST_INFO' && doc._id && (
+                                                    <Button variant="ghost" size="sm" onClick={() => handleDeleteDocument(doc._id)} className="text-red-500 hover:text-red-700 h-8 w-8 p-0 flex-shrink-0">
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
+                                                )}
                                             </div>
                                             <span className="text-xs text-muted-foreground ml-6">
                                                 Ajouté le {new Date(doc.uploadedAt || Date.now()).toLocaleDateString()}

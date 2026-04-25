@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { GraduationCap, MapPin, Wallet, FileText, Upload, CheckCircle, ChevronRight, ChevronLeft, Trash2, Plus, AlertCircle, Activity } from 'lucide-react';
+import { GraduationCap, MapPin, Wallet, FileText, Upload, CheckCircle, ChevronRight, ChevronLeft, Trash2, Plus, AlertCircle, Activity, Save } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { APP_CONFIG } from '@/config/constants';
 
@@ -29,6 +29,26 @@ const StudentOnboarding = () => {
     const [currentStep, setCurrentStep] = useState(1);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+
+    useEffect(() => {
+        const loadDraft = async () => {
+            try {
+                const res = await api.get('/requests');
+                if (res.data && res.data.length > 0) {
+                    const request = res.data[0];
+                    if (request.status === 'DRAFT') {
+                        if (request.needs && request.needs.length > 0) setNeeds(request.needs);
+                        if (request.documents && request.documents.length > 0) setDocuments(request.documents);
+                    } else if (request.status !== 'DRAFT') {
+                        navigate('/student');
+                    }
+                }
+            } catch (err) {
+                console.error("Error loading draft", err);
+            }
+        };
+        loadDraft();
+    }, [navigate]);
 
     // Form State
     const [profileData, setProfileData] = useState({
@@ -130,6 +150,36 @@ const StudentOnboarding = () => {
     };
     
     const prevStep = () => setCurrentStep(prev => Math.max(prev - 1, 1));
+
+    const handleSaveDraft = async () => {
+        setLoading(true);
+        setError('');
+        try {
+            const cleanProfileData = { ...profileData };
+            if (cleanProfileData.resources === '') delete cleanProfileData.resources;
+
+            const profileRes = await api.put('/profile', cleanProfileData);
+            if (typeof updateProfile === 'function') {
+                updateProfile(profileRes.data);
+            }
+
+            const validNeeds = needs.filter(n => Number(n.amount) > 0);
+
+            await api.post('/requests', {
+                amountNeeded: validNeeds.reduce((sum, n) => sum + Number(n.amount), 0),
+                status: 'DRAFT',
+                needs: validNeeds,
+                documents: documents
+            });
+            
+            alert('Brouillon sauvegardé avec succès ! Vous pouvez revenir plus tard.');
+        } catch (err) {
+            console.error("Error saving draft", err);
+            setError(err.response?.data?.message || err.message || "Erreur lors de la sauvegarde.");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleSubmit = async () => {
         setLoading(true);
@@ -394,20 +444,27 @@ const StudentOnboarding = () => {
                     </CardContent>
 
                     {/* Footer / Controls */}
-                    <CardFooter className="bg-gray-50 p-6 flex justify-between border-t">
-                        <Button variant="outline" onClick={prevStep} disabled={currentStep === 1 || loading}>
-                            <ChevronLeft className="w-4 h-4 mr-2" /> Retour
-                        </Button>
+                    <CardFooter className="bg-gray-50 p-6 flex flex-col sm:flex-row justify-between items-center border-t gap-4">
+                        <div className="flex w-full sm:w-auto justify-between gap-4 order-2 sm:order-1">
+                            <Button variant="outline" onClick={prevStep} disabled={currentStep === 1 || loading} className="w-1/2 sm:w-auto">
+                                <ChevronLeft className="w-4 h-4 mr-2" /> Retour
+                            </Button>
+                            <Button variant="ghost" onClick={handleSaveDraft} disabled={loading} className="text-gray-500 hover:text-gray-700 w-1/2 sm:w-auto">
+                                <Save className="w-4 h-4 mr-2" /> Sauvegarder
+                            </Button>
+                        </div>
                         
-                        {currentStep < STEPS.length ? (
-                            <Button onClick={nextStep} className="bg-blue-600 hover:bg-blue-700">
-                                Suivant <ChevronRight className="w-4 h-4 ml-2" />
-                            </Button>
-                        ) : (
-                            <Button onClick={handleSubmit} disabled={loading} className="bg-green-600 hover:bg-green-700 px-8">
-                                {loading ? 'Création en cours...' : 'Soumettre mon dossier'}
-                            </Button>
-                        )}
+                        <div className="w-full sm:w-auto order-1 sm:order-2 flex justify-end">
+                            {currentStep < STEPS.length ? (
+                                <Button onClick={nextStep} className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto">
+                                    Suivant <ChevronRight className="w-4 h-4 ml-2" />
+                                </Button>
+                            ) : (
+                                <Button onClick={handleSubmit} disabled={loading} className="bg-green-600 hover:bg-green-700 px-8 w-full sm:w-auto">
+                                    {loading ? 'Création...' : 'Soumettre mon dossier'}
+                                </Button>
+                            )}
+                        </div>
                     </CardFooter>
                 </Card>
             </div>

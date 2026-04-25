@@ -7,20 +7,33 @@ const User = require('../models/User');
 // Create a request (Student)
 router.post('/', auth, async (req, res) => {
     try {
-        // Check if student already has a request
-        let request = await Request.findOne({ student: req.user.id });
-        if (request) {
-            return res.status(400).json({ message: 'Vous avez déjà une demande en cours' });
-        }
-
         const { amountNeeded, status, needs, documents } = req.body;
 
-        let finalAmount = amountNeeded;
+        let finalAmount = amountNeeded || 0;
         let finalNeeds = [];
 
         if (needs && Array.isArray(needs) && needs.length > 0) {
             finalAmount = needs.reduce((sum, item) => sum + Number(item.amount), 0);
             finalNeeds = needs;
+        }
+
+        // Check if student already has a request
+        let request = await Request.findOne({ student: req.user.id });
+        if (request) {
+            if (request.status === 'DRAFT') {
+                // Update draft
+                request.amountNeeded = finalAmount;
+                request.needs = finalNeeds;
+                if (documents) request.documents = documents;
+                request.status = status || 'SUBMITTED';
+                if (request.status !== 'DRAFT') {
+                    request.history.push({ action: 'Soumission du dossier', user: 'Étudiant' });
+                }
+                await request.save();
+                return res.json(request);
+            } else {
+                return res.status(400).json({ message: 'Vous avez déjà une demande en cours' });
+            }
         }
 
         request = new Request({
@@ -224,6 +237,46 @@ router.post('/:id/documents', auth, async (req, res) => {
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Erreur serveur');
+    }
+});
+
+// Delete document from request (Student)
+router.delete('/:id/documents/:docId', auth, async (req, res) => {
+    try {
+        const request = await Request.findById(req.params.id);
+        if (!request) return res.status(404).json({ message: 'Demande non trouvée' });
+
+        if (request.student.toString() !== req.user.id) {
+            return res.status(401).json({ message: 'Non autorisé' });
+        }
+
+        const docIndex = request.documents.findIndex(d => d._id.toString() === req.params.docId);
+        if (docIndex === -1) return res.status(404).json({ message: 'Document non trouvé' });
+
+        const doc = request.documents[docIndex];
+
+        // Only delete from File collection if it's a local file
+        if (!doc.url.startsWith('http')) {
+            const File = require('../models/File');
+            const fileId = doc.url.split('/').pop();
+            try {
+                await File.findByIdAndDelete(fileId);
+            } catch (err) {
+                console.error("Erreur suppression fichier DB:", err);
+            }
+        }
+
+        request.documents.splice(docIndex, 1);
+        request.history.push({
+            action: `Suppression document : ${doc.name}`,
+            user: 'Étudiant'
+        });
+
+        await request.save();
+        res.json(request);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).json({ message: 'Erreur serveur' });
     }
 });
 
