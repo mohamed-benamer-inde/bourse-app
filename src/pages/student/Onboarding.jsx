@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { GraduationCap, MapPin, Wallet, FileText, Upload, CheckCircle, ChevronRight, ChevronLeft, Trash2, Plus, AlertCircle, Activity } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { APP_CONFIG } from '@/config/constants';
 
 const STEPS = [
     { id: 1, title: 'Contact', icon: MapPin },
@@ -228,13 +229,23 @@ const StudentOnboarding = () => {
                                                 <label className="text-sm font-medium mb-1 block">Niveau d'études <span className="text-red-500">*</span></label>
                                                 <select name="educationLevel" value={profileData.educationLevel} onChange={updateProfile} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background">
                                                     <option value="">Sélectionner...</option>
-                                                    <option value="Bac+1">Bac+1</option>
-                                                    <option value="Bac+2">Bac+2</option>
-                                                    <option value="Bac+3">Bac+3</option>
-                                                    <option value="Master">Master</option>
+                                                    {APP_CONFIG.educationLevels.map(level => (
+                                                        <option key={level} value={level}>{level}</option>
+                                                    ))}
                                                 </select>
                                             </div>
-                                            <div><label className="text-sm font-medium mb-1 block">Filière / Établissement <span className="text-red-500">*</span></label><Input name="studyField" value={profileData.studyField} onChange={updateProfile} placeholder="Ex: Informatique - UMP Oujda" /></div>
+                                            <div>
+                                                <label className="text-sm font-medium mb-1 block">Filière / Établissement <span className="text-red-500">*</span></label>
+                                                <div className="flex gap-2">
+                                                    <select name="studyField" value={profileData.studyField} onChange={updateProfile} className="flex h-10 w-1/2 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background">
+                                                        <option value="">Filière...</option>
+                                                        {APP_CONFIG.studyFields.map(field => (
+                                                            <option key={field} value={field}>{field}</option>
+                                                        ))}
+                                                    </select>
+                                                    <Input name="studyFieldDetail" placeholder="Ex: UMP Oujda" onChange={(e) => updateProfile({ target: { name: 'studyField', value: profileData.studyField ? `${profileData.studyField.split(' - ')[0]} - ${e.target.value}` : e.target.value } })} className="w-1/2" />
+                                                </div>
+                                            </div>
                                             <div><label className="text-sm font-medium mb-1 block">Moyenne actuelle (ou Bac) <span className="text-red-500">*</span></label><Input name="gradeCurrent" type="number" step="0.01" max="20" value={profileData.gradeCurrent} onChange={updateProfile} placeholder="/20" /></div>
                                             <div><label className="text-sm font-medium mb-1 block">Moyenne Année N-1 (Optionnel)</label><Input name="gradeN1" type="number" step="0.01" max="20" value={profileData.gradeN1} onChange={updateProfile} /></div>
                                         </div>
@@ -249,11 +260,12 @@ const StudentOnboarding = () => {
                                             <div>
                                                 <label className="text-sm font-medium mb-1 block">Indice RSU <span className="text-red-500">*</span></label>
                                                 <select name="rsuTranche" value={profileData.rsuTranche} onChange={updateProfile} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background">
-                                                    <option value="">Sélectionner...</option>
-                                                    <option value="T1 (Très faible)">T1 (Très faible)</option>
-                                                    <option value="T2 (Faible)">T2 (Faible)</option>
-                                                    <option value="T3 (Moyen)">T3 (Moyen)</option>
-                                                    <option value="T4 (Autre)">T4 (Autre)</option>
+                                                    <option value="">Sélectionner votre tranche RSU...</option>
+                                                    <option value="Tranche 1 (Moins de 9.32)">Tranche 1 (Moins de 9.32)</option>
+                                                    <option value="Tranche 2 (Entre 9.32 et 9.74)">Tranche 2 (Entre 9.32 et 9.74)</option>
+                                                    <option value="Tranche 3 (Entre 9.74 et 10.50)">Tranche 3 (Entre 9.74 et 10.50)</option>
+                                                    <option value="Tranche 4 (Supérieur à 10.50)">Tranche 4 (Supérieur à 10.50)</option>
+                                                    <option value="Non inscrit / En cours">Non inscrit / En cours</option>
                                                 </select>
                                             </div>
                                             <div><label className="text-sm font-medium mb-1 block">Ressources familiales estimées / mois</label><Input name="resources" type="number" value={profileData.resources} onChange={updateProfile} placeholder="En Dirhams (DH)" /></div>
