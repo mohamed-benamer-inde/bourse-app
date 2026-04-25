@@ -22,7 +22,7 @@ const STEPS = [
 ];
 
 const StudentOnboarding = () => {
-    const { user, setUser } = useAuth();
+    const { user, updateProfile } = useAuth();
     const { createRequest } = useData();
     const navigate = useNavigate();
 
@@ -141,7 +141,7 @@ const StudentOnboarding = () => {
             if (cleanProfileData.resources === '') delete cleanProfileData.resources;
 
             const profileRes = await api.put('/profile', cleanProfileData);
-            setUser(profileRes.data);
+            updateProfile(profileRes.data);
 
             // Filter out empty needs
             const validNeeds = needs.filter(n => Number(n.amount) > 0);
