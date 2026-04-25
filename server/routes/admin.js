@@ -250,10 +250,19 @@ router.delete('/users/:id', auth, adminAuth, async (req, res) => {
 
             const request = await Request.findOne({ student: user._id });
             if (request) {
-                // Delete files
+                // Delete files (local DB files only)
                 if (request.documents && request.documents.length > 0) {
-                    const fileIds = request.documents.map(d => d.url.split('/').pop());
-                    await File.deleteMany({ _id: { $in: fileIds } });
+                    const fileIds = request.documents
+                        .filter(d => !d.url.startsWith('http'))
+                        .map(d => d.url.split('/').pop());
+                    
+                    if (fileIds.length > 0) {
+                        try {
+                            await File.deleteMany({ _id: { $in: fileIds } });
+                        } catch (err) {
+                            console.error("Erreur suppression fichiers:", err);
+                        }
+                    }
                 }
                 await Request.findByIdAndDelete(request._id);
             }
