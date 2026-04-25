@@ -175,7 +175,10 @@ router.put('/:id/status', auth, async (req, res) => {
         });
 
         await request.save();
-        res.json(request);
+        const populatedRequest = await Request.findById(request._id)
+            .populate('student', 'name email phone address educationLevel studyField rsuTranche resources description gradeCurrent gradeN1 gradeN2 gradeN3 transcriptStatus')
+            .populate('donor', 'name email');
+        res.json(populatedRequest);
 
     } catch (err) {
         console.error(err.message);

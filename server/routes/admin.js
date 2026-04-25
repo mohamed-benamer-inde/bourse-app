@@ -144,7 +144,10 @@ router.put('/requests/:id/status', auth, adminAuth, async (req, res) => {
         // For now, we just change status. Admin can manually delete docs if needed.
 
         await request.save();
-        res.json(request);
+        const populatedRequest = await Request.findById(request._id)
+            .populate('student', 'name email phone rsuTranche gradeCurrent')
+            .populate('donor', 'name email');
+        res.json(populatedRequest);
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Erreur serveur');
