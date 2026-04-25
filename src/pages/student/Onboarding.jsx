@@ -141,7 +141,9 @@ const StudentOnboarding = () => {
             if (cleanProfileData.resources === '') delete cleanProfileData.resources;
 
             const profileRes = await api.put('/profile', cleanProfileData);
-            updateProfile(profileRes.data);
+            if (typeof updateProfile === 'function') {
+                updateProfile(profileRes.data);
+            }
 
             // Filter out empty needs
             const validNeeds = needs.filter(n => Number(n.amount) > 0);
@@ -160,7 +162,12 @@ const StudentOnboarding = () => {
             }
         } catch (err) {
             console.error("Error submitting onboarding", err);
-            const errorMessage = err.response?.data?.message || err.message || "Une erreur est survenue lors de la création du dossier.";
+            let errorMessage = "Une erreur est survenue lors de la création du dossier.";
+            if (err.response && err.response.data && err.response.data.message) {
+                errorMessage = err.response.data.message;
+            } else if (err.message) {
+                errorMessage = err.message;
+            }
             setError(errorMessage);
         } finally {
             setLoading(false);
