@@ -49,8 +49,8 @@ router.put('/', auth, async (req, res) => {
         res.json(user);
 
     } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Erreur serveur');
+        console.error('Erreur PUT /profile:', err);
+        res.status(500).json({ message: `Erreur Profil: ${err.message}` });
     }
 });
 
