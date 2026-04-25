@@ -13,7 +13,7 @@ router.post('/', auth, async (req, res) => {
             return res.status(400).json({ message: 'Vous avez déjà une demande en cours' });
         }
 
-        const { amountNeeded, status, needs } = req.body;
+        const { amountNeeded, status, needs, documents } = req.body;
 
         let finalAmount = amountNeeded;
         let finalNeeds = [];
@@ -27,6 +27,7 @@ router.post('/', auth, async (req, res) => {
             student: req.user.id,
             amountNeeded: finalAmount,
             needs: finalNeeds,
+            documents: documents || [],
             status: status || 'SUBMITTED', // Default to SUBMITTED for backward compatibility unless specified
             history: [{ action: 'Création du dossier', user: 'Étudiant' }]
         });
@@ -202,9 +203,9 @@ router.post('/:id/documents', auth, async (req, res) => {
             return res.status(401).json({ message: 'Non autorisé' });
         }
 
-        // Check limit (10 docs)
-        if (request.documents.length >= 10) {
-            return res.status(400).json({ message: 'Limite de 10 documents atteinte' });
+        // Check limit (5 docs)
+        if (request.documents.length >= 5) {
+            return res.status(400).json({ message: 'Limite de 5 documents atteinte' });
         }
 
         request.documents.push({ name, url, type });

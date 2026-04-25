@@ -9,6 +9,7 @@ import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import StudentDashboard from './pages/student/Dashboard';
+import StudentOnboarding from './pages/student/Onboarding';
 import DonorDashboard from './pages/donor/Dashboard';
 import AdminDashboard from './pages/admin/Dashboard';
 
@@ -26,6 +27,7 @@ function App() {
 
                         {/* Protected Routes (Mock) */}
                         <Route path="/student" element={<Layout><StudentDashboard /></Layout>} />
+                        <Route path="/student/onboarding" element={<Layout><StudentOnboarding /></Layout>} />
                         <Route path="/donor" element={<Layout><DonorDashboard /></Layout>} />
                         <Route path="/admin" element={<Layout><AdminDashboard /></Layout>} />
                     </Routes>
