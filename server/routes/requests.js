@@ -122,16 +122,19 @@ router.put('/:id/status', auth, async (req, res) => {
             // PURGE LOGIC: Delete all documents associated with this request
             if (request.documents && request.documents.length > 0) {
                 const File = require('../models/File');
-                const fileIds = request.documents.map(doc => {
-                    // Extract ID from URL /api/files/:id
-                    const parts = doc.url.split('/');
-                    return parts[parts.length - 1];
-                });
+                const fileIds = request.documents
+                    .filter(doc => !doc.url.startsWith('http')) // Only local files
+                    .map(doc => {
+                        const parts = doc.url.split('/');
+                        return parts[parts.length - 1];
+                    });
 
                 try {
-                    await File.deleteMany({ _id: { $in: fileIds } });
-                    console.log(`Purged ${fileIds.length} documents for request ${request._id}`);
-                    request.documents = []; // Clear the array
+                    if (fileIds.length > 0) {
+                        await File.deleteMany({ _id: { $in: fileIds } });
+                        console.log(`Purged ${fileIds.length} local DB documents for request ${request._id}`);
+                    }
+                    request.documents = []; // Clear the array (both local and Cloudinary links)
                 } catch (purgeErr) {
                     console.error('Error purging documents:', purgeErr);
                     // Continue even if purge fails, but log it

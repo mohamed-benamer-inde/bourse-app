@@ -169,12 +169,21 @@ router.delete('/requests/:id/documents/:docId', auth, adminAuth, async (req, res
 
         const doc = request.documents[docIndex];
 
-        // Remove from DB (File collection)
-        // Extract ID from URL /api/files/:id
-        const parts = doc.url.split('/');
-        const fileId = parts[parts.length - 1];
+        // Remove from DB (File collection) only if it's a local URL
+        if (!doc.url.startsWith('http')) {
+            // Extract ID from URL /api/files/:id
+            const parts = doc.url.split('/');
+            const fileId = parts[parts.length - 1];
 
-        await File.findByIdAndDelete(fileId);
+            try {
+                await File.findByIdAndDelete(fileId);
+            } catch (err) {
+                console.error("Erreur suppression fichier DB:", err);
+            }
+        } else {
+            // Optionally, delete from Cloudinary here using public_id
+            // We skip it for now to keep it simple, the asset remains orphaned on Cloudinary.
+        }
 
         // Remove from request array
         request.documents.splice(docIndex, 1);

@@ -260,7 +260,7 @@ const StudentDashboard = () => {
                                         <li key={idx} className="flex flex-col p-3 border rounded-lg bg-gray-50 hover:bg-blue-50 transition-colors">
                                             <div className="flex items-center gap-2 overflow-hidden mb-1">
                                                 <FileText className="h-4 w-4 text-blue-500 flex-shrink-0" />
-                                                <a href={`${api.defaults.baseURL.replace('/api', '')}${doc.url}`} target="_blank" rel="noopener noreferrer" className="text-sm font-medium hover:text-blue-600 truncate">
+                                                <a href={doc.url.startsWith('http') ? doc.url : `${api.defaults.baseURL.replace('/api', '')}${doc.url}`} target="_blank" rel="noopener noreferrer" className="text-sm font-medium hover:text-blue-600 truncate">
                                                     {doc.name}
                                                 </a>
                                             </div>

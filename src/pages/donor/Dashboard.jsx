@@ -415,7 +415,7 @@ const DonorDashboard = () => {
                                                 </div>
                                             </div>
                                             <Button variant="ghost" size="sm" asChild className="text-blue-600 hover:bg-blue-50">
-                                                <a href={`${api.defaults.baseURL.replace('/api', '')}${doc.url}`} target="_blank" rel="noopener noreferrer">Ouvrir</a>
+                                                <a href={doc.url.startsWith('http') ? doc.url : `${api.defaults.baseURL.replace('/api', '')}${doc.url}`} target="_blank" rel="noopener noreferrer">Ouvrir</a>
                                             </Button>
                                         </div>
                                     ))}

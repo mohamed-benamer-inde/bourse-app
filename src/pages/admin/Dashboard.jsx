@@ -573,8 +573,8 @@ const AdminDashboard = () => {
                                             <span className="text-sm font-medium truncate max-w-[200px]">{doc.name}</span>
                                             <div className="flex gap-2">
                                                 {/* Assuming document route requires cookies now, open in new tab might work if browser sends cookies, otherwise needs proper blob fetch */}
-                                                <Button size="sm" variant="outline" asChild>
-                                                    <a href={`${api.defaults.baseURL.replace('/api', '')}${doc.url}`} target="_blank" rel="noreferrer">Ouvrir</a>
+                                                <Button variant="outline" size="sm" asChild>
+                                                    <a href={doc.url.startsWith('http') ? doc.url : `${api.defaults.baseURL.replace('/api', '')}${doc.url}`} target="_blank" rel="noreferrer">Ouvrir</a>
                                                 </Button>
                                                 <Button size="sm" variant="destructive" onClick={() => handleDeleteDocument(doc._id)}><Trash2 className="h-4 w-4" /></Button>
                                             </div>
