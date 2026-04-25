@@ -35,8 +35,8 @@ router.post('/', auth, async (req, res) => {
         await request.save();
         res.json(request);
     } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Erreur serveur');
+        console.error('Erreur POST /requests:', err);
+        res.status(500).json({ message: `Erreur Request: ${err.message}` });
     }
 });
 
