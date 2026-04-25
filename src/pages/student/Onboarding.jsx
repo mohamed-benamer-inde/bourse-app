@@ -160,7 +160,8 @@ const StudentOnboarding = () => {
             }
         } catch (err) {
             console.error("Error submitting onboarding", err);
-            setError(err.response?.data?.message || "Une erreur est survenue lors de la création du dossier.");
+            const errorMessage = err.response?.data?.message || err.message || "Une erreur est survenue lors de la création du dossier.";
+            setError(errorMessage);
         } finally {
             setLoading(false);
         }
