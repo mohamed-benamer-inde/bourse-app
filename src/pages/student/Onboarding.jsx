@@ -48,7 +48,7 @@ const StudentOnboarding = () => {
     const [needs, setNeeds] = useState([{ category: 'Scolarité', amount: '', description: '' }]);
     const [documents, setDocuments] = useState([]); // { name, url, type }
 
-    const updateProfile = (e) => setProfileData({ ...profileData, [e.target.name]: e.target.value });
+    const handleProfileChange = (e) => setProfileData({ ...profileData, [e.target.name]: e.target.value });
 
     // Needs handlers
     const addNeed = () => setNeeds([...needs, { category: 'Scolarité', amount: '', description: '' }]);
@@ -229,8 +229,8 @@ const StudentOnboarding = () => {
                                     <div className="space-y-6">
                                         <h2 className="text-2xl font-semibold">Vos coordonnées</h2>
                                         <div className="space-y-4">
-                                            <div><label className="text-sm font-medium mb-1 block">Adresse complète <span className="text-red-500">*</span></label><Input name="address" value={profileData.address} onChange={updateProfile} placeholder="Quartier, Ville..." /></div>
-                                            <div><label className="text-sm font-medium mb-1 block">Téléphone <span className="text-red-500">*</span></label><Input name="phone" value={profileData.phone} onChange={updateProfile} placeholder="06..." /></div>
+                                            <div><label className="text-sm font-medium mb-1 block">Adresse complète <span className="text-red-500">*</span></label><Input name="address" value={profileData.address} onChange={handleProfileChange} placeholder="Quartier, Ville..." /></div>
+                                            <div><label className="text-sm font-medium mb-1 block">Téléphone <span className="text-red-500">*</span></label><Input name="phone" value={profileData.phone} onChange={handleProfileChange} placeholder="06..." /></div>
                                         </div>
                                     </div>
                                 )}
@@ -242,7 +242,7 @@ const StudentOnboarding = () => {
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div>
                                                 <label className="text-sm font-medium mb-1 block">Niveau d'études <span className="text-red-500">*</span></label>
-                                                <select name="educationLevel" value={profileData.educationLevel} onChange={updateProfile} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background">
+                                                <select name="educationLevel" value={profileData.educationLevel} onChange={handleProfileChange} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background">
                                                     <option value="">Sélectionner...</option>
                                                     {APP_CONFIG.educationLevels.map(level => (
                                                         <option key={level} value={level}>{level}</option>
@@ -252,17 +252,17 @@ const StudentOnboarding = () => {
                                             <div>
                                                 <label className="text-sm font-medium mb-1 block">Filière / Établissement <span className="text-red-500">*</span></label>
                                                 <div className="flex gap-2">
-                                                    <select name="studyField" value={profileData.studyField} onChange={updateProfile} className="flex h-10 w-1/2 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background">
+                                                    <select name="studyField" value={profileData.studyField} onChange={handleProfileChange} className="flex h-10 w-1/2 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background">
                                                         <option value="">Filière...</option>
                                                         {APP_CONFIG.studyFields.map(field => (
                                                             <option key={field} value={field}>{field}</option>
                                                         ))}
                                                     </select>
-                                                    <Input name="studyFieldDetail" placeholder="Ex: UMP Oujda" onChange={(e) => updateProfile({ target: { name: 'studyField', value: profileData.studyField ? `${profileData.studyField.split(' - ')[0]} - ${e.target.value}` : e.target.value } })} className="w-1/2" />
+                                                    <Input name="studyFieldDetail" placeholder="Ex: UMP Oujda" onChange={(e) => handleProfileChange({ target: { name: 'studyField', value: profileData.studyField ? `${profileData.studyField.split(' - ')[0]} - ${e.target.value}` : e.target.value } })} className="w-1/2" />
                                                 </div>
                                             </div>
-                                            <div><label className="text-sm font-medium mb-1 block">Moyenne actuelle (ou Bac) <span className="text-red-500">*</span></label><Input name="gradeCurrent" type="number" step="0.01" max="20" value={profileData.gradeCurrent} onChange={updateProfile} placeholder="/20" /></div>
-                                            <div><label className="text-sm font-medium mb-1 block">Moyenne Année N-1 (Optionnel)</label><Input name="gradeN1" type="number" step="0.01" max="20" value={profileData.gradeN1} onChange={updateProfile} /></div>
+                                            <div><label className="text-sm font-medium mb-1 block">Moyenne actuelle (ou Bac) <span className="text-red-500">*</span></label><Input name="gradeCurrent" type="number" step="0.01" max="20" value={profileData.gradeCurrent} onChange={handleProfileChange} placeholder="/20" /></div>
+                                            <div><label className="text-sm font-medium mb-1 block">Moyenne Année N-1 (Optionnel)</label><Input name="gradeN1" type="number" step="0.01" max="20" value={profileData.gradeN1} onChange={handleProfileChange} /></div>
                                         </div>
                                     </div>
                                 )}
@@ -274,7 +274,7 @@ const StudentOnboarding = () => {
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div>
                                                 <label className="text-sm font-medium mb-1 block">Indice RSU <span className="text-red-500">*</span></label>
-                                                <select name="rsuTranche" value={profileData.rsuTranche} onChange={updateProfile} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background">
+                                                <select name="rsuTranche" value={profileData.rsuTranche} onChange={handleProfileChange} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background">
                                                     <option value="">Sélectionner votre tranche RSU...</option>
                                                     <option value="Tranche 1 (Moins de 9.32)">Tranche 1 (Moins de 9.32)</option>
                                                     <option value="Tranche 2 (Entre 9.32 et 9.74)">Tranche 2 (Entre 9.32 et 9.74)</option>
@@ -283,11 +283,11 @@ const StudentOnboarding = () => {
                                                     <option value="Non inscrit / En cours">Non inscrit / En cours</option>
                                                 </select>
                                             </div>
-                                            <div><label className="text-sm font-medium mb-1 block">Ressources familiales estimées / mois</label><Input name="resources" type="number" value={profileData.resources} onChange={updateProfile} placeholder="En Dirhams (DH)" /></div>
+                                            <div><label className="text-sm font-medium mb-1 block">Ressources familiales mensuelles (Optionnel)</label><Input name="resources" type="number" value={profileData.resources} onChange={handleProfileChange} placeholder="En MAD" /></div>
                                         </div>
                                         <div>
-                                            <label className="text-sm font-medium mb-1 block">Lettre de motivation (Pourquoi avez-vous besoin d'aide ?) <span className="text-red-500">*</span></label>
-                                            <Textarea name="description" value={profileData.description} onChange={updateProfile} placeholder="Expliquez votre situation, vos ambitions et pourquoi ce financement est crucial pour vous..." className="min-h-[150px]" />
+                                            <label className="text-sm font-medium mb-1 block">Lettre de motivation / Explication de la situation <span className="text-red-500">*</span></label>
+                                            <textarea name="description" value={profileData.description} onChange={handleProfileChange} className="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background" placeholder="Expliquez votre situation, pourquoi vous avez besoin de cette bourse et quel est votre projet d'études..." />
                                         </div>
                                     </div>
                                 )}
