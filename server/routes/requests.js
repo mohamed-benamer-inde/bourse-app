@@ -141,7 +141,7 @@ router.put('/:id/status', auth, async (req, res) => {
         // Logic for status transitions
         // Donor: SUBMITTED or INFO_RECEIVED -> ANALYZING (Take charge or Resume)
         if (status === 'ANALYZING' && req.user.role === 'donor') {
-            const validSourceStatuses = ['SUBMITTED', 'INFO_RECEIVED'];
+            const validSourceStatuses = ['SUBMITTED', 'INFO_RECEIVED', 'PARTIALLY_FUNDED'];
             if (!validSourceStatuses.includes(request.status)) {
                 return res.status(400).json({ message: 'Transition invalide' });
             }
