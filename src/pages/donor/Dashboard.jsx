@@ -45,6 +45,8 @@ const DonorDashboard = () => {
     // Modals
     const [selectedRequest, setSelectedRequest] = useState(null);
     const [requestInfoModalOpen, setRequestInfoModalOpen] = useState(false);
+    const [takeChargeModalOpen, setTakeChargeModalOpen] = useState(false);
+    const [contributionAmount, setContributionAmount] = useState('');
     const [infoRequestMessage, setInfoRequestMessage] = useState('');
     const [currentRequestForInfo, setCurrentRequestForInfo] = useState(null);
 
@@ -233,9 +235,14 @@ const DonorDashboard = () => {
                                                     </p>
                                                     <div className="bg-blue-50/50 p-3 rounded-lg space-y-2">
                                                         <div className="flex justify-between items-center text-sm">
-                                                            <span className="text-gray-600">Besoin Financier :</span>
-                                                            <span className="font-bold text-blue-600">{formatCurrency(req.amountNeeded)}</span>
+                                                            <span className="text-gray-600">Reste à financer :</span>
+                                                            <span className="font-bold text-blue-600">{formatCurrency(req.amountNeeded - (req.alreadyFunded || 0))}</span>
                                                         </div>
+                                                        {req.alreadyFunded > 0 && (
+                                                            <div className="text-[10px] text-green-600 font-medium text-right">
+                                                                {formatCurrency(req.alreadyFunded)} déjà financés par d'autres donateurs
+                                                            </div>
+                                                        )}
                                                         <div className="flex justify-between items-center text-sm border-t border-blue-100/50 pt-2">
                                                             <span className="text-gray-600">Situation RSU :</span>
                                                             <span className="font-medium text-gray-900">{req.student?.rsuTranche || 'N/A'}</span>
@@ -246,7 +253,14 @@ const DonorDashboard = () => {
                                                     </Button>
                                                 </CardContent>
                                                 <CardFooter className="pt-0">
-                                                    <Button className="w-full bg-blue-600 hover:bg-blue-700 shadow-sm" onClick={() => updateRequestStatus(req._id, 'ANALYZING', user?._id, user?.name)}>
+                                                    <Button 
+                                                        className="w-full bg-blue-600 hover:bg-blue-700 shadow-sm" 
+                                                        onClick={() => {
+                                                            setCurrentRequestForInfo(req); // Use this to track which req we are funding
+                                                            setContributionAmount((req.amountNeeded - (req.alreadyFunded || 0)).toString());
+                                                            setTakeChargeModalOpen(true);
+                                                        }}
+                                                    >
                                                         <Lock className="h-4 w-4 mr-2" /> Prendre en charge ce dossier
                                                     </Button>
                                                 </CardFooter>
@@ -426,6 +440,24 @@ const DonorDashboard = () => {
                                 <p className="text-sm text-muted-foreground bg-gray-50 p-4 rounded-xl text-center italic border border-dashed">Aucun document n'a été fourni par l'étudiant.</p>
                             )}
                         </div>
+
+                        {selectedRequest.fundingHistory && selectedRequest.fundingHistory.length > 0 && (
+                            <div className="space-y-2">
+                                <h3 className="font-semibold text-lg border-b pb-1 text-gray-700">Historique des financements anonymes</h3>
+                                <div className="space-y-2">
+                                    {selectedRequest.fundingHistory.map((fund, idx) => (
+                                        <div key={idx} className="flex justify-between items-center bg-green-50/50 p-3 rounded-xl border border-green-100 text-sm">
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                                                <span className="font-medium">Donateur précédent</span>
+                                                <span className="text-xs text-muted-foreground">{new Date(fund.date).toLocaleDateString()}</span>
+                                            </div>
+                                            <span className="font-bold text-green-700">+{formatCurrency(fund.amount)}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
             </Modal>
@@ -451,6 +483,51 @@ const DonorDashboard = () => {
                         <Button variant="ghost" onClick={() => setRequestInfoModalOpen(false)}>Annuler</Button>
                         <Button onClick={handleSubmitInfoRequest} disabled={!infoRequestMessage.trim()} className="bg-blue-600 hover:bg-blue-700">
                             Envoyer le message
+                        </Button>
+                    </div>
+                </div>
+            </Modal>
+
+            <Modal isOpen={takeChargeModalOpen} onClose={() => setTakeChargeModalOpen(false)} title="Montant de votre engagement">
+                <div className="space-y-4">
+                    <div className="bg-blue-50 border border-blue-200 p-4 rounded-xl">
+                        <p className="text-sm text-blue-800">
+                            Quel montant souhaitez-vous financer pour ce dossier ? 
+                            Le reste sera proposé à d'autres donateurs une fois votre cycle terminé.
+                        </p>
+                    </div>
+                    <div className="space-y-1">
+                        <label className="text-xs font-semibold text-gray-500 uppercase">Montant (DH)</label>
+                        <Input 
+                            type="number" 
+                            value={contributionAmount} 
+                            onChange={(e) => setContributionAmount(e.target.value)}
+                            max={currentRequestForInfo ? currentRequestForInfo.amountNeeded - (currentRequestForInfo.alreadyFunded || 0) : undefined}
+                            placeholder="Ex: 5000"
+                        />
+                        {currentRequestForInfo && (
+                            <p className="text-[10px] text-muted-foreground">
+                                Maximum conseillé : {formatCurrency(currentRequestForInfo.amountNeeded - (currentRequestForInfo.alreadyFunded || 0))}
+                            </p>
+                        )}
+                    </div>
+                    <div className="flex justify-end gap-3 pt-2">
+                        <Button variant="ghost" onClick={() => setTakeChargeModalOpen(false)}>Annuler</Button>
+                        <Button 
+                            className="bg-blue-600 hover:bg-blue-700"
+                            disabled={!contributionAmount || Number(contributionAmount) <= 0}
+                            onClick={async () => {
+                                await updateRequestStatus(
+                                    currentRequestForInfo._id, 
+                                    'ANALYZING', 
+                                    user?._id, 
+                                    user?.name,
+                                    { contribution: Number(contributionAmount) }
+                                );
+                                setTakeChargeModalOpen(false);
+                            }}
+                        >
+                            Confirmer mon engagement
                         </Button>
                     </div>
                 </div>

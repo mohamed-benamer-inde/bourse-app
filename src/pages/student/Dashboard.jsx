@@ -325,7 +325,18 @@ const StudentDashboard = () => {
                             <CardTitle className="text-lg">Budget demandé</CardTitle>
                         </CardHeader>
                         <CardContent className="p-4">
-                            <div className="text-3xl font-bold text-blue-600 mb-4">{myRequest.amountNeeded} DH</div>
+                            <div className="text-3xl font-bold text-blue-600">{formatCurrency(myRequest.amountNeeded)}</div>
+                            {myRequest.alreadyFunded > 0 && (
+                                <div className="mt-1 text-sm text-green-600 font-medium">
+                                    {formatCurrency(myRequest.alreadyFunded)} déjà sécurisés
+                                </div>
+                            )}
+                            <div className="mt-4 mb-4 h-2 bg-gray-100 rounded-full overflow-hidden">
+                                <div 
+                                    className="h-full bg-green-500 transition-all duration-500" 
+                                    style={{ width: `${Math.min(100, (myRequest.alreadyFunded / myRequest.amountNeeded) * 100)}%` }}
+                                ></div>
+                            </div>
                             <ul className="space-y-2 divide-y">
                                 {myRequest.needs?.map((need, idx) => (
                                     <li key={idx} className="flex justify-between text-sm py-2">
@@ -400,6 +411,24 @@ const StudentDashboard = () => {
                                     <span>Total Demandé</span>
                                     <span className="text-lg">{formatCurrency(myRequest.amountNeeded)}</span>
                                 </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {myRequest.fundingHistory && myRequest.fundingHistory.length > 0 && (
+                        <div className="space-y-2">
+                            <h3 className="font-semibold text-lg border-b pb-1 text-gray-700">Historique des financements sécurisés</h3>
+                            <div className="space-y-2">
+                                {myRequest.fundingHistory.map((fund, idx) => (
+                                    <div key={idx} className="flex justify-between items-center bg-green-50/50 p-3 rounded-xl border border-green-100 text-sm">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                                            <span className="font-medium text-gray-800">Donateur Anonyme</span>
+                                            <span className="text-xs text-muted-foreground">{new Date(fund.date).toLocaleDateString()}</span>
+                                        </div>
+                                        <span className="font-bold text-green-700">+{formatCurrency(fund.amount)}</span>
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     )}

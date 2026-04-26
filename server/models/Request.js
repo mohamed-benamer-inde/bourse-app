@@ -29,6 +29,21 @@ const requestSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
+    alreadyFunded: {
+        type: Number,
+        default: 0
+    },
+    currentContribution: {
+        type: Number,
+        default: 0
+    },
+    fundingHistory: [{
+        amount: Number,
+        date: {
+            type: Date,
+            default: Date.now
+        }
+    }],
     needs: [{
         category: {
             type: String,

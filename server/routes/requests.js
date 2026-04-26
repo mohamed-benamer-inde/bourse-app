@@ -93,12 +93,19 @@ router.get('/', auth, async (req, res) => {
                     // Don't show full address to donor, only city
                     doc.student.address = "Masqué par sécurité";
                 }
+                // Anonymize history for donors (only see generic 'Donateur' or 'Admin')
+                if (doc.history) {
+                    doc.history = doc.history.map(h => ({
+                        ...h,
+                        user: h.user === 'donor' || h.user === 'donateur' ? 'Donateur' : h.user
+                    }));
+                }
                 return doc;
             });
             res.json(maskedRequests);
         } else {
             // Admin sees all
-            const requests = await Request.find().populate('student', 'name');
+            const requests = await Request.find().populate('student', 'name').populate('donor', 'name');
             res.json(requests);
         }
     } catch (err) {
@@ -132,6 +139,13 @@ router.put('/:id/status', auth, async (req, res) => {
 
             if (request.status === 'SUBMITTED') {
                 request.donor = req.user.id;
+                // If the donor specified a contribution amount
+                if (req.body.data && req.body.data.contribution) {
+                    request.currentContribution = Number(req.body.data.contribution);
+                } else {
+                    // Default to remaining balance
+                    request.currentContribution = request.amountNeeded - (request.alreadyFunded || 0);
+                }
             }
         }
         // Donor: ANALYZING/INFO_RECEIVED -> REQUEST_INFO
@@ -181,9 +195,35 @@ router.put('/:id/status', auth, async (req, res) => {
                 }
             }
         }
-        // Student: PAID -> CONFIRMED
+        // Student: PAID -> CONFIRMED (End of cycle)
         else if (status === 'CONFIRMED' && req.user.role === 'student') {
             if (request.status !== 'PAID' || request.student.toString() !== req.user.id) return res.status(400).json({ message: 'Non autorisé' });
+            
+            // 1. Finalize current contribution
+            const amountJustFunded = request.currentContribution || 0;
+            request.alreadyFunded = (request.alreadyFunded || 0) + amountJustFunded;
+            
+            // 2. Add to funding history
+            request.fundingHistory.push({
+                amount: amountJustFunded,
+                date: new Date()
+            });
+
+            // 3. Check if more funding is needed
+            if (request.alreadyFunded < request.amountNeeded) {
+                // Return to market for next donor
+                request.status = 'SUBMITTED';
+                request.donor = null;
+                request.currentContribution = 0;
+                
+                request.history.push({
+                    action: `Cycle de financement terminé (${amountJustFunded} DH). Retour en ligne pour le reliquat.`,
+                    user: 'Système'
+                });
+
+                await request.save();
+                return res.json(await Request.findById(request._id).populate('student', 'name email city'));
+            }
         }
         // Release (Donor cancels analysis): ANALYZING -> SUBMITTED
         else if (status === 'SUBMITTED' && req.user.role === 'donor') {
@@ -215,7 +255,7 @@ router.put('/:id/status', auth, async (req, res) => {
         request.status = status;
         request.history.push({
             action: `Changement de statut : ${status}`,
-            user: req.user.role // Should be name but simplified for now
+            user: req.user.role === 'student' ? 'Étudiant' : (req.user.role === 'donor' ? 'Donateur' : 'Admin')
         });
 
         await request.save();
