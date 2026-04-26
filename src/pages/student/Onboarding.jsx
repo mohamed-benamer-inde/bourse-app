@@ -23,7 +23,7 @@ const STEPS = [
 
 const StudentOnboarding = () => {
     const { user, updateProfile } = useAuth();
-    const { createRequest } = useData();
+    const { createRequest, refreshRequests } = useData();
     const navigate = useNavigate();
 
     const [currentStep, setCurrentStep] = useState(1);
@@ -209,6 +209,8 @@ const StudentOnboarding = () => {
             });
 
             if (reqRes.data) {
+                // Refresh data to make sure Dashboard sees the new request
+                await refreshRequests();
                 // Success! Redirect to Dashboard
                 navigate('/student');
             }
