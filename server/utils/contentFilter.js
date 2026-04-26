@@ -1,6 +1,6 @@
 /**
  * Local Content Filter
- * Blocks common patterns like phone numbers, emails, IBANs, and specific address keywords.
+ * Blocks common patterns like phone numbers, emails, and IBANs.
  */
 
 const ribRegex = /\b\d{24}\b/g;
@@ -8,43 +8,66 @@ const ibanRegex = /[A-Z]{2}\d{2}[A-Z0-9]{1,30}/gi;
 const phoneRegex = /(\+212|0)([ \-_.]?[567])([ \-_.]?\d{2}){4}/g;
 const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
 
-// Address keywords (common in Moroccan addresses)
-const addressKeywords = [
-    'rue', 'hay', 'quartier', 'zenqa', 'lotissement', 'appartement', 'appt', 'imm', 'immeuble', 
-    'secteur', 'bloc', 'villa', 'n°', 'numéro', 'residence', 'douar'
+// Basic list of insults (Français + Darija phonétique)
+const forbiddenWords = [
+    'merde', 'con', 'salope', 'pute', 'connard', 'encule', 'zebb', 'zamel', 'qahba', 'taboun', 'mouk'
 ];
 
-const checkContent = (text, isSchool = false) => {
+/**
+ * Checks for insults and forbidden words.
+ */
+const checkInsults = (text) => {
+    if (!text) return { isValid: true };
+    const lowerText = text.toLowerCase();
+    for (const word of forbiddenWords) {
+        if (lowerText.includes(word)) {
+            return { isValid: false, reason: "Contenu inapproprié détecté." };
+        }
+    }
+    return { isValid: true };
+};
+
+/**
+ * Strict phone validation (no letters allowed).
+ */
+const checkPhoneStrict = (phone) => {
+    if (!phone) return { isValid: true };
+    const hasLetters = /[a-zA-Z]/.test(phone);
+    if (hasLetters) {
+        return { isValid: false, reason: "Le numéro de téléphone ne doit pas contenir de lettres." };
+    }
+    const digits = phone.replace(/\D/g, '');
+    if (digits.length < 8) {
+        return { isValid: false, reason: "Le numéro de téléphone est incomplet ou invalide." };
+    }
+    return { isValid: true };
+};
+
+const checkContent = (text) => {
     if (!text) return { isValid: true };
 
     const lowerText = text.toLowerCase();
 
-    // 1. Check Phone
+    // 1. Check Insults FIRST
+    const insultCheck = checkInsults(text);
+    if (!insultCheck.isValid) return insultCheck;
+
+    // 2. Check Phone
     if (phoneRegex.test(text)) {
-        return { isValid: false, reason: "Les numéros de téléphone ne sont pas autorisés pour votre sécurité." };
+        return { isValid: false, reason: "Les numéros de téléphone ne sont pas autorisés dans ce champ." };
     }
 
-    // 2. Check Email
+    // 3. Check Email
     if (emailRegex.test(text)) {
         return { isValid: false, reason: "Les adresses email ne sont pas autorisées pour éviter les contacts hors plateforme." };
     }
 
-    // 3. Check RIB/IBAN
+    // 4. Check RIB/IBAN
     if (ribRegex.test(text) || ibanRegex.test(text)) {
         return { isValid: false, reason: "Le partage de coordonnées bancaires (RIB/IBAN) est strictement interdit." };
-    }
-
-    // 4. Check Address Keywords (SKIP for school address)
-    if (!isSchool) {
-        for (const keyword of addressKeywords) {
-            const regex = new RegExp(`\\b${keyword}\\b`, 'i');
-            if (regex.test(lowerText)) {
-                return { isValid: false, reason: `Votre message semble contenir une adresse personnelle (${keyword}). Les adresses précises ne sont pas autorisées.` };
-            }
-        }
     }
 
     return { isValid: true };
 };
 
-module.exports = { checkContent };
+module.exports = { checkContent, checkInsults, checkPhoneStrict };

@@ -14,7 +14,7 @@ router.get('/', auth, async (req, res) => {
     }
 });
 
-const { checkContent } = require('../utils/contentFilter');
+const { checkContent, checkInsults, checkPhoneStrict } = require('../utils/contentFilter');
 const { validateWithAI } = require('../utils/aiValidation');
 
 // Update user profile
@@ -26,6 +26,19 @@ router.put('/', auth, async (req, res) => {
         } = req.body;
 
         // --- MODERATION START ---
+        // 1. Strict Phone Check
+        if (phone) {
+            const phoneCheck = checkPhoneStrict(phone);
+            if (!phoneCheck.isValid) return res.status(400).json({ message: phoneCheck.reason });
+        }
+
+        // 2. City Check (Insults only)
+        if (city) {
+            const cityCheck = checkInsults(city);
+            if (!cityCheck.isValid) return res.status(400).json({ message: `Champ Ville : ${cityCheck.reason}` });
+        }
+
+        // 3. Free Text Fields Check
         const fieldsToValidate = {
             'lettre de motivation': description,
             'adresse personnelle': address,
@@ -35,8 +48,7 @@ router.put('/', auth, async (req, res) => {
 
         for (const [context, value] of Object.entries(fieldsToValidate)) {
             if (value) {
-                const isSchool = context === 'adresse de l\'école';
-                const localCheck = checkContent(value, isSchool);
+                const localCheck = checkContent(value);
                 if (!localCheck.isValid) {
                     return res.status(400).json({ message: `Champ "${context}" : ${localCheck.reason}` });
                 }

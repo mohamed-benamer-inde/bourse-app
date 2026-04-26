@@ -13,7 +13,7 @@ const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
  * @returns {Promise<{isValid: boolean, reason: string}>}
  */
 const validateWithAI = async (text, context = 'général') => {
-    if (!text || text.length < 10) {
+    if (!text || text.trim().length < 2) {
         return { isValid: false, reason: "Le texte est trop court pour être pertinent." };
     }
 

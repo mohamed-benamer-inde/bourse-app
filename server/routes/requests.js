@@ -4,7 +4,7 @@ const auth = require('../middleware/auth');
 const Request = require('../models/Request');
 const User = require('../models/User');
 const { sendStatusEmail } = require('../utils/notifications');
-const { checkContent } = require('../utils/contentFilter');
+const { checkContent, checkInsults, checkPhoneStrict } = require('../utils/contentFilter');
 const { validateWithAI } = require('../utils/aiValidation');
 
 // Create a request (Student)
@@ -282,6 +282,16 @@ router.put('/:id/status', auth, async (req, res) => {
 
             // --- FINAL MODERATION CHECK ---
             const student = await User.findById(req.user.id);
+            
+            // 1. Strict Phone Check
+            const phoneCheck = checkPhoneStrict(student.phone);
+            if (!phoneCheck.isValid) return res.status(400).json({ message: `Numéro de téléphone : ${phoneCheck.reason}` });
+
+            // 2. City Check
+            const cityCheck = checkInsults(student.city);
+            if (!cityCheck.isValid) return res.status(400).json({ message: `Ville : ${cityCheck.reason}` });
+
+            // 3. Free Text Fields
             const fieldsToValidate = {
                 'lettre de motivation': student.description,
                 'adresse personnelle': student.address,
@@ -291,8 +301,7 @@ router.put('/:id/status', auth, async (req, res) => {
 
             for (const [context, value] of Object.entries(fieldsToValidate)) {
                 if (value) {
-                    const isSchool = context === 'adresse de l\'école';
-                    const localCheck = checkContent(value, isSchool);
+                    const localCheck = checkContent(value);
                     if (!localCheck.isValid) return res.status(400).json({ message: `Le dossier contient des informations non autorisées (${context}) : ${localCheck.reason}` });
                     
                     const aiCheck = await validateWithAI(value, context);
