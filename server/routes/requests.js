@@ -77,11 +77,17 @@ router.get('/', auth, async (req, res) => {
             return res.json([request]);
         } else if (req.user.role === 'donor') {
             // Donors see submitted or partially funded requests, or requests they are handling
+            // EXCLUDE requests they have already funded in a previous cycle
             const requests = await Request.find({
-                $or: [
-                    { status: 'SUBMITTED' },
-                    { status: 'PARTIALLY_FUNDED' },
-                    { donor: req.user.id }
+                $and: [
+                    {
+                        $or: [
+                            { status: 'SUBMITTED' },
+                            { status: 'PARTIALLY_FUNDED' },
+                            { donor: req.user.id }
+                        ]
+                    },
+                    { "fundingHistory.donor": { $ne: req.user.id } }
                 ]
             }).populate('student', 'name email phone address city educationLevel studyField rsuTranche resources description gradeCurrent gradeN1 gradeN2 gradeN3 transcriptStatus schoolAddress');
             
@@ -98,7 +104,14 @@ router.get('/', auth, async (req, res) => {
                 if (doc.history) {
                     doc.history = doc.history.map(h => ({
                         ...h,
-                        user: h.user === 'donor' || h.user === 'donateur' ? 'Donateur' : h.user
+                        user: h.user === 'donor' || h.user === 'donateur' || h.user === 'Donateur' ? 'Donateur' : h.user
+                    }));
+                }
+                // Anonymize funding history for donors (REMOVE donor IDs)
+                if (doc.fundingHistory) {
+                    doc.fundingHistory = doc.fundingHistory.map(f => ({
+                        amount: f.amount,
+                        date: f.date
                     }));
                 }
                 return doc;
@@ -205,8 +218,9 @@ router.put('/:id/status', auth, async (req, res) => {
             const amountJustFunded = request.currentContribution || 0;
             request.alreadyFunded = (request.alreadyFunded || 0) + amountJustFunded;
             
-            // 2. Add to funding history
+            // 2. Add to funding history (with donor ID for filtering)
             request.fundingHistory.push({
+                donor: request.donor,
                 amount: amountJustFunded,
                 date: new Date()
             });

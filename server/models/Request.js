@@ -38,6 +38,10 @@ const requestSchema = new mongoose.Schema({
         default: 0
     },
     fundingHistory: [{
+        donor: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User'
+        },
         amount: Number,
         date: {
             type: Date,
