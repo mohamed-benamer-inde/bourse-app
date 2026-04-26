@@ -10,34 +10,32 @@ export const DataProvider = ({ children }) => {
     const [loading, setLoading] = useState(false);
 
     // Fetch requests when user is logged in
-    useEffect(() => {
-        const fetchRequests = async () => {
-            if (user) {
-                setLoading(true);
-                try {
-                    const res = await api.get('/requests');
-                    const requestsData = res.data || [];
-                    // Mock/Enrich data for demo purposes if fields are missing
-                    const enrichedRequests = requestsData.map(req => {
-                        if (!req.student) req.student = {};
-
-                        // Initialize exchanges if not present
-                        if (!req.exchanges) req.exchanges = [];
-
-                        return req;
-                    });
-                    setRequests(enrichedRequests);
-                } catch (err) {
-                    console.error("Error fetching requests", err);
-                } finally {
-                    setLoading(false);
-                }
-            } else {
-                setRequests([]);
+    const refreshRequests = async () => {
+        if (user) {
+            setLoading(true);
+            try {
+                const res = await api.get('/requests');
+                const requestsData = res.data || [];
+                const enrichedRequests = requestsData.map(req => {
+                    if (!req.student) req.student = {};
+                    if (!req.exchanges) req.exchanges = [];
+                    return req;
+                });
+                setRequests(enrichedRequests);
+            } catch (err) {
+                console.error("Error fetching requests", err);
+            } finally {
+                setLoading(false);
             }
-        };
-        fetchRequests();
+        } else {
+            setRequests([]);
+        }
+    };
+
+    useEffect(() => {
+        refreshRequests();
     }, [user]);
+
 
     const updateRequestStatus = async (requestId, newStatus, userId, userName, data = null) => {
         try {
@@ -88,7 +86,7 @@ export const DataProvider = ({ children }) => {
     };
 
     return (
-        <DataContext.Provider value={{ requests, updateRequestStatus, createRequest, getStudentRequest, getDonorRequests, loading }}>
+        <DataContext.Provider value={{ requests, updateRequestStatus, createRequest, getStudentRequest, getDonorRequests, refreshRequests, loading }}>
             {children}
         </DataContext.Provider>
     );

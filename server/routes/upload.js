@@ -50,8 +50,8 @@ router.post('/', (req, res) => {
         });
 
         try {
-            // Determine resource type for Cloudinary
-            const resourceType = req.file.mimetype === 'application/pdf' ? 'raw' : 'image';
+            // Use 'image' for both images and PDFs so Cloudinary can serve PDFs inline instead of forcing download
+            const resourceType = 'image';
 
             // Upload to Cloudinary using stream
             const streamUpload = (req) => {

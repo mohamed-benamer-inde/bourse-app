@@ -14,7 +14,7 @@ import { motion } from 'framer-motion';
 
 const StudentDashboard = () => {
     const { user } = useAuth();
-    const { getStudentRequest, updateRequestStatus, loading: dataLoading } = useData();
+    const { getStudentRequest, updateRequestStatus, refreshRequests, loading: dataLoading } = useData();
     const navigate = useNavigate();
 
     const [responseMessage, setResponseMessage] = useState('');
@@ -54,17 +54,8 @@ const StudentDashboard = () => {
         if (!window.confirm("Êtes-vous sûr de vouloir supprimer ce document ?")) return;
         try {
             await api.delete(`/requests/${myRequest._id}/documents/${docId}`);
-            // Update context state
-            const updatedRequests = requests.map(r => {
-                if (r._id === myRequest._id) {
-                    return { ...r, documents: r.documents.filter(d => d._id !== docId) };
-                }
-                return r;
-            });
-            // We need useData's setRequests to update globally, but we don't have it exported.
-            // Alternatively, we can just fetch the single request again, or reload cleanly.
-            // A clean reload is acceptable if we don't redirect on REQUEST_INFO.
-            window.location.reload();
+            // We use refreshRequests instead of window.location.reload() to avoid white page
+            await refreshRequests();
         } catch (err) {
             console.error("Error deleting document", err);
             alert("Erreur lors de la suppression.");
@@ -100,7 +91,7 @@ const StudentDashboard = () => {
             });
 
             alert("Document ajouté avec succès !\n\nN'oubliez pas d'envoyer un message au donateur (bouton 'Envoyer ma réponse') pour qu'il soit notifié de cet ajout.");
-            window.location.reload(); // Refresh to get updated request data
+            await refreshRequests(); // Refresh data seamlessly
         } catch (err) {
             console.error("Error adding document", err);
             alert(err.response?.data?.message || "Erreur lors de l'ajout.");

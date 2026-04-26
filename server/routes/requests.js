@@ -3,6 +3,7 @@ const router = express.Router();
 const auth = require('../middleware/auth');
 const Request = require('../models/Request');
 const User = require('../models/User');
+const { sendStatusEmail } = require('../utils/email');
 
 // Create a request (Student)
 router.post('/', auth, async (req, res) => {
@@ -195,6 +196,16 @@ router.put('/:id/status', auth, async (req, res) => {
         const populatedRequest = await Request.findById(request._id)
             .populate('student', 'name email phone address educationLevel studyField rsuTranche resources description gradeCurrent gradeN1 gradeN2 gradeN3 transcriptStatus')
             .populate('donor', 'name email');
+
+        // Send Email Notification to Student asynchronously
+        try {
+            if (populatedRequest.student && populatedRequest.student.email) {
+                sendStatusEmail(populatedRequest.student.email, populatedRequest.student.name, status);
+            }
+        } catch (emailErr) {
+            console.error("Error sending status email:", emailErr);
+        }
+
         res.json(populatedRequest);
 
     } catch (err) {
