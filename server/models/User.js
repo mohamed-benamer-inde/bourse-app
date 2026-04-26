@@ -27,6 +27,8 @@ const userSchema = new mongoose.Schema({
     },
     // Student specific fields
     address: String,
+    city: String,
+    schoolAddress: String,
     phone: String,
     educationLevel: String,
     studyField: String,

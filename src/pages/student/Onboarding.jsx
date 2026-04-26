@@ -53,6 +53,8 @@ const StudentOnboarding = () => {
     // Form State
     const [profileData, setProfileData] = useState({
         address: user?.address || '',
+        city: user?.city || '',
+        schoolAddress: user?.schoolAddress || '',
         phone: user?.phone || '',
         educationLevel: user?.educationLevel || '',
         studyField: user?.studyField || '',
@@ -278,9 +280,19 @@ const StudentOnboarding = () => {
                                 {currentStep === 1 && (
                                     <div className="space-y-6">
                                         <h2 className="text-2xl font-semibold">Vos coordonnées</h2>
-                                        <div className="space-y-4">
-                                            <div><label className="text-sm font-medium mb-1 block">Adresse complète <span className="text-red-500">*</span></label><Input name="address" value={profileData.address} onChange={handleProfileChange} placeholder="Quartier, Ville..." /></div>
-                                            <div><label className="text-sm font-medium mb-1 block">Téléphone <span className="text-red-500">*</span></label><Input name="phone" value={profileData.phone} onChange={handleProfileChange} placeholder="06..." /></div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div className="md:col-span-2">
+                                                <label className="text-sm font-medium mb-1 block">Adresse (Rue, Quartier) <span className="text-red-500">*</span></label>
+                                                <Input name="address" value={profileData.address} onChange={handleProfileChange} placeholder="Ex: 12 Rue des Oliviers, Appt 4" />
+                                            </div>
+                                            <div>
+                                                <label className="text-sm font-medium mb-1 block">Ville <span className="text-red-500">*</span></label>
+                                                <Input name="city" value={profileData.city} onChange={handleProfileChange} placeholder="Ex: Casablanca" />
+                                            </div>
+                                            <div>
+                                                <label className="text-sm font-medium mb-1 block">Téléphone <span className="text-red-500">*</span></label>
+                                                <Input name="phone" value={profileData.phone} onChange={handleProfileChange} placeholder="06..." />
+                                            </div>
                                         </div>
                                     </div>
                                 )}
@@ -291,7 +303,7 @@ const StudentOnboarding = () => {
                                         <h2 className="text-2xl font-semibold">Parcours Académique</h2>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div>
-                                                <label className="text-sm font-medium mb-1 block">Niveau d'études <span className="text-red-500">*</span></label>
+                                                <label className="text-sm font-medium mb-1 block">Niveau d'études visé <span className="text-red-500">*</span></label>
                                                 <select name="educationLevel" value={profileData.educationLevel} onChange={handleProfileChange} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background">
                                                     <option value="">Sélectionner...</option>
                                                     {APP_CONFIG.educationLevels.map(level => (
@@ -311,8 +323,26 @@ const StudentOnboarding = () => {
                                                     <Input name="studyFieldDetail" placeholder="Ex: UMP Oujda" onChange={(e) => handleProfileChange({ target: { name: 'studyField', value: profileData.studyField ? `${profileData.studyField.split(' - ')[0]} - ${e.target.value}` : e.target.value } })} className="w-1/2" />
                                                 </div>
                                             </div>
-                                            <div><label className="text-sm font-medium mb-1 block">Moyenne actuelle (ou Bac) <span className="text-red-500">*</span></label><Input name="gradeCurrent" type="number" step="0.01" max="20" value={profileData.gradeCurrent} onChange={handleProfileChange} placeholder="/20" /></div>
-                                            <div><label className="text-sm font-medium mb-1 block">Moyenne Année N-1 (Optionnel)</label><Input name="gradeN1" type="number" step="0.01" max="20" value={profileData.gradeN1} onChange={handleProfileChange} /></div>
+                                            <div className="md:col-span-2">
+                                                <label className="text-sm font-medium mb-1 block">Adresse de l'école ou établissement visé <span className="text-red-500">*</span></label>
+                                                <Input name="schoolAddress" value={profileData.schoolAddress} onChange={handleProfileChange} placeholder="Adresse complète de l'établissement pour l'année prochaine" />
+                                            </div>
+                                            <div>
+                                                <label className="text-sm font-medium mb-1 block">Moyenne actuelle (ou Bac) <span className="text-red-500">*</span></label>
+                                                <Input name="gradeCurrent" type="number" step="0.01" max="20" value={profileData.gradeCurrent} onChange={handleProfileChange} placeholder="/20" />
+                                            </div>
+                                            <div>
+                                                <label className="text-sm font-medium mb-1 block">Moyenne Année N-1 (Optionnel)</label>
+                                                <Input name="gradeN1" type="number" step="0.01" max="20" value={profileData.gradeN1} onChange={handleProfileChange} placeholder="/20" />
+                                            </div>
+                                            <div>
+                                                <label className="text-sm font-medium mb-1 block">Moyenne Année N-2 (Optionnel)</label>
+                                                <Input name="gradeN2" type="number" step="0.01" max="20" value={profileData.gradeN2} onChange={handleProfileChange} placeholder="/20" />
+                                            </div>
+                                            <div>
+                                                <label className="text-sm font-medium mb-1 block">Note du Bac (Optionnel)</label>
+                                                <Input name="gradeN3" type="number" step="0.01" max="20" value={profileData.gradeN3} onChange={handleProfileChange} placeholder="/20" />
+                                            </div>
                                         </div>
                                     </div>
                                 )}

@@ -356,6 +356,7 @@ const StudentDashboard = () => {
                                 <span className="text-muted-foreground">Email :</span><span className="col-span-2">{user?.email}</span>
                                 <span className="text-muted-foreground">Téléphone :</span><span className="col-span-2">{user?.phone || 'Non renseigné'}</span>
                                 <span className="text-muted-foreground">Adresse :</span><span className="col-span-2">{user?.address}</span>
+                                <span className="text-muted-foreground">Ville :</span><span className="col-span-2">{user?.city}</span>
                             </div>
                         </div>
                         <div className="space-y-2">
@@ -363,6 +364,7 @@ const StudentDashboard = () => {
                             <div className="grid grid-cols-3 gap-2 text-sm bg-gray-50 p-3 rounded-lg border">
                                 <span className="text-muted-foreground">Niveau :</span><span className="col-span-2 font-medium">{user?.educationLevel}</span>
                                 <span className="text-muted-foreground">Filière :</span><span className="col-span-2">{user?.studyField}</span>
+                                <span className="text-muted-foreground">École visée :</span><span className="col-span-2">{user?.schoolAddress || 'Non renseignée'}</span>
                                 <span className="text-muted-foreground">Moyenne :</span><span className="col-span-2 font-bold text-blue-600">{user?.gradeCurrent}/20</span>
                             </div>
                         </div>

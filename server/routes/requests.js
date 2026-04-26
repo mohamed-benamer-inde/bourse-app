@@ -54,6 +54,20 @@ router.post('/', auth, async (req, res) => {
     }
 });
 
+// Helper to mask sensitive data
+const maskEmail = (email) => {
+    if (!email) return '';
+    const [name, domain] = email.split('@');
+    if (name.length <= 2) return '***@' + domain;
+    return name.substring(0, 2) + '***@' + domain;
+};
+
+const maskPhone = (phone) => {
+    if (!phone) return '';
+    if (phone.length <= 4) return '******';
+    return phone.substring(0, 2) + '******' + phone.substring(phone.length - 2);
+};
+
 // Get requests (Donor: all submitted/analyzing/etc, Student: own)
 router.get('/', auth, async (req, res) => {
     try {
@@ -68,8 +82,20 @@ router.get('/', auth, async (req, res) => {
                     { status: 'SUBMITTED' },
                     { donor: req.user.id }
                 ]
-            }).populate('student', 'name email phone address educationLevel studyField rsuTranche resources description gradeCurrent gradeN1 gradeN2 gradeN3 transcriptStatus');
-            res.json(requests);
+            }).populate('student', 'name email phone address city educationLevel studyField rsuTranche resources description gradeCurrent gradeN1 gradeN2 gradeN3 transcriptStatus schoolAddress');
+            
+            // Mask sensitive data for donors
+            const maskedRequests = requests.map(req => {
+                const doc = req.toObject();
+                if (doc.student) {
+                    doc.student.email = maskEmail(doc.student.email);
+                    doc.student.phone = maskPhone(doc.student.phone);
+                    // Don't show full address to donor, only city
+                    doc.student.address = "Masqué par sécurité";
+                }
+                return doc;
+            });
+            res.json(maskedRequests);
         } else {
             // Admin sees all
             const requests = await Request.find().populate('student', 'name');
