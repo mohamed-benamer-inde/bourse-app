@@ -25,10 +25,25 @@ const COLORS = {
     CONFIRMED: '#14532d'
 };
 
+const getStatusLabel = (status) => {
+    const labels = {
+        'SUBMITTED': 'EN ATTENTE',
+        'ANALYZING': 'ANALYSE EN COURS',
+        'REQUEST_INFO': 'INFOS DEMANDÉES',
+        'INFO_RECEIVED': 'RÉPONSE REÇUE',
+        'VALIDATED': 'VALIDE - ATTENTE ÉTUDIANT',
+        'ACCEPTED': 'ACCÉPTÉ - ATTENTE PAIEMENT',
+        'PAID': 'PAYÉ - ATTENTE RÉCEPTION',
+        'CONFIRMED': 'TERMINÉ',
+        'PARTIALLY_FUNDED': 'FINANCEMENT PARTIEL'
+    };
+    return labels[status] || status;
+};
+
 const getStatusBadge = (status) => {
     return (
         <Badge style={{ backgroundColor: COLORS[status] || COLORS.DRAFT, color: 'white', border: 'none' }}>
-            {status === 'INFO_RECEIVED' ? 'RÉPONSE REÇUE' : status}
+            {getStatusLabel(status)}
         </Badge>
     );
 };
@@ -45,16 +60,16 @@ const DonorDashboard = () => {
     // Modals
     const [selectedRequest, setSelectedRequest] = useState(null);
     const [requestInfoModalOpen, setRequestInfoModalOpen] = useState(false);
-    const [takeChargeModalOpen, setTakeChargeModalOpen] = useState(false);
-    const [contributionAmount, setContributionAmount] = useState('');
+    const [validationModalOpen, setValidationModalOpen] = useState(false);
+    const [needsContributions, setNeedsContributions] = useState({});
     const [infoRequestMessage, setInfoRequestMessage] = useState('');
-    const [currentRequestForInfo, setCurrentRequestForInfo] = useState(null);
+    const [currentRequestForAction, setCurrentRequestForAction] = useState(null);
 
     // Filter Logic
     const isMyRequest = (req) => req.donor === user?._id || req.donor?._id === user?._id;
 
     const availableRequests = useMemo(() => {
-        return allRequests.filter(req => req.status === 'SUBMITTED' && !isMyRequest(req))
+        return allRequests.filter(req => (req.status === 'SUBMITTED' || req.status === 'PARTIALLY_FUNDED') && !isMyRequest(req))
             .filter(req => 
                 searchTerm === '' || 
                 req.student?.studyField?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -255,11 +270,7 @@ const DonorDashboard = () => {
                                                 <CardFooter className="pt-0">
                                                     <Button 
                                                         className="w-full bg-blue-600 hover:bg-blue-700 shadow-sm" 
-                                                        onClick={() => {
-                                                            setCurrentRequestForInfo(req); // Use this to track which req we are funding
-                                                            setContributionAmount((req.amountNeeded - (req.alreadyFunded || 0)).toString());
-                                                            setTakeChargeModalOpen(true);
-                                                        }}
+                                                        onClick={() => updateRequestStatus(req._id, 'ANALYZING', user?._id, user?.name)}
                                                     >
                                                         <Lock className="h-4 w-4 mr-2" /> Prendre en charge ce dossier
                                                     </Button>
@@ -310,7 +321,20 @@ const DonorDashboard = () => {
                                                                 <Button variant="outline" size="sm" className="text-orange-600 border-orange-200 hover:bg-orange-50" onClick={() => handleOpenRequestInfo(req)}>
                                                                     Infos
                                                                 </Button>
-                                                                <Button variant="default" size="sm" className="bg-purple-600 hover:bg-purple-700" onClick={() => updateRequestStatus(req._id, 'VALIDATED', user?._id, user?.name)}>
+                                                                <Button 
+                                                                    variant="default" 
+                                                                    size="sm" 
+                                                                    className="bg-purple-600 hover:bg-purple-700" 
+                                                                    onClick={() => {
+                                                                        setCurrentRequestForAction(req);
+                                                                        const initialContributions = {};
+                                                                        req.needs.forEach(n => {
+                                                                            initialContributions[n._id || n.id] = n.amount;
+                                                                        });
+                                                                        setNeedsContributions(initialContributions);
+                                                                        setValidationModalOpen(true);
+                                                                    }}
+                                                                >
                                                                     <CheckCircle className="h-4 w-4 mr-1" /> Valider
                                                                 </Button>
                                                             </>
@@ -488,47 +512,81 @@ const DonorDashboard = () => {
                 </div>
             </Modal>
 
-            <Modal isOpen={takeChargeModalOpen} onClose={() => setTakeChargeModalOpen(false)} title="Montant de votre engagement">
-                <div className="space-y-4">
+            <Modal isOpen={validationModalOpen} onClose={() => setValidationModalOpen(false)} title="Détail du financement">
+                <div className="space-y-6">
                     <div className="bg-blue-50 border border-blue-200 p-4 rounded-xl">
                         <p className="text-sm text-blue-800">
-                            Quel montant souhaitez-vous financer pour ce dossier ? 
-                            Le reste sera proposé à d'autres donateurs une fois votre cycle terminé.
+                            Sélectionnez les besoins que vous souhaitez financer. Vous pouvez financer 100% d'un besoin ou saisir un montant partiel.
                         </p>
                     </div>
-                    <div className="space-y-1">
-                        <label className="text-xs font-semibold text-gray-500 uppercase">Montant (DH)</label>
-                        <Input 
-                            type="number" 
-                            value={contributionAmount} 
-                            onChange={(e) => setContributionAmount(e.target.value)}
-                            max={currentRequestForInfo ? currentRequestForInfo.amountNeeded - (currentRequestForInfo.alreadyFunded || 0) : undefined}
-                            placeholder="Ex: 5000"
-                        />
-                        {currentRequestForInfo && (
-                            <p className="text-[10px] text-muted-foreground">
-                                Maximum conseillé : {formatCurrency(currentRequestForInfo.amountNeeded - (currentRequestForInfo.alreadyFunded || 0))}
-                            </p>
-                        )}
+
+                    <div className="space-y-3">
+                        {currentRequestForAction?.needs.map((need) => {
+                            const needId = need._id || need.id;
+                            const currentVal = needsContributions[needId] || 0;
+                            return (
+                                <div key={needId} className="flex flex-col p-3 border rounded-xl bg-gray-50/50 hover:bg-gray-50 transition-colors">
+                                    <div className="flex justify-between items-center mb-2">
+                                        <div className="flex items-center gap-2">
+                                            <input 
+                                                type="checkbox" 
+                                                checked={currentVal === need.amount}
+                                                onChange={(e) => {
+                                                    setNeedsContributions(prev => ({
+                                                        ...prev,
+                                                        [needId]: e.target.checked ? need.amount : 0
+                                                    }));
+                                                }}
+                                                className="w-4 h-4 rounded text-blue-600"
+                                            />
+                                            <span className="font-medium text-sm text-gray-800">{need.category}</span>
+                                        </div>
+                                        <span className="text-xs font-bold text-gray-500">{formatCurrency(need.amount)}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Input 
+                                            type="number"
+                                            size="sm"
+                                            className="h-8 text-xs"
+                                            value={currentVal}
+                                            onChange={(e) => {
+                                                const val = Math.min(need.amount, Math.max(0, Number(e.target.value)));
+                                                setNeedsContributions(prev => ({ ...prev, [needId]: val }));
+                                            }}
+                                            placeholder="Montant..."
+                                        />
+                                        <span className="text-[10px] text-gray-400">DH</span>
+                                    </div>
+                                </div>
+                            );
+                        })}
                     </div>
-                    <div className="flex justify-end gap-3 pt-2">
-                        <Button variant="ghost" onClick={() => setTakeChargeModalOpen(false)}>Annuler</Button>
-                        <Button 
-                            className="bg-blue-600 hover:bg-blue-700"
-                            disabled={!contributionAmount || Number(contributionAmount) <= 0}
-                            onClick={async () => {
-                                await updateRequestStatus(
-                                    currentRequestForInfo._id, 
-                                    'ANALYZING', 
-                                    user?._id, 
-                                    user?.name,
-                                    { contribution: Number(contributionAmount) }
-                                );
-                                setTakeChargeModalOpen(false);
-                            }}
-                        >
-                            Confirmer mon engagement
-                        </Button>
+
+                    <div className="flex justify-between items-center p-4 bg-gray-900 text-white rounded-xl shadow-inner">
+                        <div className="flex flex-col">
+                            <span className="text-[10px] uppercase tracking-wider text-gray-400">Total Engagement</span>
+                            <span className="text-xl font-bold">{formatCurrency(Object.values(needsContributions).reduce((a, b) => a + b, 0))}</span>
+                        </div>
+                        <div className="flex gap-2">
+                            <Button variant="ghost" className="text-gray-400 hover:text-white" onClick={() => setValidationModalOpen(false)}>Annuler</Button>
+                            <Button 
+                                className="bg-blue-600 hover:bg-blue-700"
+                                disabled={Object.values(needsContributions).reduce((a, b) => a + b, 0) <= 0}
+                                onClick={async () => {
+                                    const total = Object.values(needsContributions).reduce((a, b) => a + b, 0);
+                                    await updateRequestStatus(
+                                        currentRequestForAction._id, 
+                                        'VALIDATED', 
+                                        user?._id, 
+                                        user?.name,
+                                        { contribution: total }
+                                    );
+                                    setValidationModalOpen(false);
+                                }}
+                            >
+                                Valider le financement
+                            </Button>
+                        </div>
                     </div>
                 </div>
             </Modal>

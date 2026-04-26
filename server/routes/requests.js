@@ -76,10 +76,11 @@ router.get('/', auth, async (req, res) => {
             if (!request) return res.json(null);
             return res.json([request]);
         } else if (req.user.role === 'donor') {
-            // Donors see submitted requests or requests they are handling
+            // Donors see submitted or partially funded requests, or requests they are handling
             const requests = await Request.find({
                 $or: [
                     { status: 'SUBMITTED' },
+                    { status: 'PARTIALLY_FUNDED' },
                     { donor: req.user.id }
                 ]
             }).populate('student', 'name email phone address city educationLevel studyField rsuTranche resources description gradeCurrent gradeN1 gradeN2 gradeN3 transcriptStatus schoolAddress');
@@ -137,15 +138,8 @@ router.put('/:id/status', auth, async (req, res) => {
                 return res.status(401).json({ message: 'Non autorisé' });
             }
 
-            if (request.status === 'SUBMITTED') {
+            if (request.status === 'SUBMITTED' || request.status === 'PARTIALLY_FUNDED') {
                 request.donor = req.user.id;
-                // If the donor specified a contribution amount
-                if (req.body.data && req.body.data.contribution) {
-                    request.currentContribution = Number(req.body.data.contribution);
-                } else {
-                    // Default to remaining balance
-                    request.currentContribution = request.amountNeeded - (request.alreadyFunded || 0);
-                }
             }
         }
         // Donor: ANALYZING/INFO_RECEIVED -> REQUEST_INFO
@@ -164,6 +158,14 @@ router.put('/:id/status', auth, async (req, res) => {
         // Donor: ANALYZING/INFO_RECEIVED -> VALIDATED
         else if (status === 'VALIDATED' && req.user.role === 'donor') {
             if ((request.status !== 'ANALYZING' && request.status !== 'INFO_RECEIVED') || request.donor.toString() !== req.user.id) return res.status(400).json({ message: 'Non autorisé' });
+            
+            // Handle contribution amount at validation step
+            if (req.body.data && req.body.data.contribution) {
+                request.currentContribution = Number(req.body.data.contribution);
+            } else {
+                // Fallback to remaining balance if not provided
+                request.currentContribution = request.amountNeeded - (request.alreadyFunded || 0);
+            }
         }
         // Student: VALIDATED -> ACCEPTED
         else if (status === 'ACCEPTED' && req.user.role === 'student') {
@@ -211,13 +213,13 @@ router.put('/:id/status', auth, async (req, res) => {
 
             // 3. Check if more funding is needed
             if (request.alreadyFunded < request.amountNeeded) {
-                // Return to market for next donor
-                request.status = 'SUBMITTED';
+                // Return to market with PARTIALLY_FUNDED status
+                request.status = 'PARTIALLY_FUNDED';
                 request.donor = null;
                 request.currentContribution = 0;
                 
                 request.history.push({
-                    action: `Cycle de financement terminé (${amountJustFunded} DH). Retour en ligne pour le reliquat.`,
+                    action: `Cycle de financement terminé (${amountJustFunded} DH). Remis en ligne pour le solde.`,
                     user: 'Système'
                 });
 

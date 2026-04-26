@@ -22,7 +22,7 @@ const requestSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['DRAFT', 'SUBMITTED', 'ANALYZING', 'REQUEST_INFO', 'INFO_RECEIVED', 'VALIDATED', 'ACCEPTED', 'PAID', 'CONFIRMED'],
+        enum: ['DRAFT', 'SUBMITTED', 'ANALYZING', 'REQUEST_INFO', 'INFO_RECEIVED', 'VALIDATED', 'ACCEPTED', 'PAID', 'CONFIRMED', 'PARTIALLY_FUNDED'],
         default: 'DRAFT'
     },
     amountNeeded: {
