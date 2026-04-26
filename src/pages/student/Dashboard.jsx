@@ -344,8 +344,8 @@ const StudentDashboard = () => {
                 <div className="space-y-6">
                     <div className="flex justify-between items-center bg-gray-100 p-4 rounded-xl border">
                         <div className="font-semibold text-lg">{user?.name}</div>
-                        <Badge className={`${statusInfo.color} text-white border-none`}>
-                            {statusInfo.label}
+                        <Badge className={`${currentStatus.color} text-white border-none`}>
+                            {currentStatus.label}
                         </Badge>
                     </div>
 
