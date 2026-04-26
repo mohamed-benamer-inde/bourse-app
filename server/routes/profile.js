@@ -43,7 +43,8 @@ router.put('/', auth, async (req, res) => {
             'lettre de motivation': description,
             'adresse personnelle': address,
             'adresse de l\'école': schoolAddress,
-            'description des ressources': resources
+            'description des ressources': resources,
+            'filière et établissement': studyField
         };
 
         for (const [context, value] of Object.entries(fieldsToValidate)) {

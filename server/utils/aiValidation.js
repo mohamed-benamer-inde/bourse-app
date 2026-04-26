@@ -4,7 +4,8 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+const modelName = process.env.GEMINI_MODEL_NAME || "gemini-1.5-flash";
+const model = genAI.getGenerativeModel({ model: modelName });
 
 /**
  * Validates text relevance and detects hidden contact info using Gemini.
@@ -13,8 +14,14 @@ const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
  * @returns {Promise<{isValid: boolean, reason: string}>}
  */
 const validateWithAI = async (text, context = 'général') => {
-    if (!text || text.trim().length < 2) {
-        return { isValid: false, reason: "Le texte est trop court pour être pertinent." };
+    const minLength = context === 'lettre de motivation' ? 100 : 2;
+    if (!text || text.trim().length < minLength) {
+        return { 
+            isValid: false, 
+            reason: context === 'lettre de motivation' 
+                ? "Votre lettre de motivation est trop courte. Pour convaincre un donateur, merci d'écrire au moins 100 caractères."
+                : "Le texte est trop court pour être pertinent." 
+        };
     }
 
     try {

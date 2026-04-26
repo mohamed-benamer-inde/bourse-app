@@ -16,6 +16,14 @@ router.post('/', auth, async (req, res) => {
         let finalNeeds = [];
 
         if (needs && Array.isArray(needs) && needs.length > 0) {
+            // --- MODERATION START ---
+            for (const item of needs) {
+                if (item.label) {
+                    const localCheck = checkContent(item.label);
+                    if (!localCheck.isValid) return res.status(400).json({ message: `Besoin "${item.label}" : ${localCheck.reason}` });
+                }
+            }
+            // --- MODERATION END ---
             finalAmount = needs.reduce((sum, item) => sum + Number(item.amount), 0);
             finalNeeds = needs;
         }
@@ -296,7 +304,8 @@ router.put('/:id/status', auth, async (req, res) => {
                 'lettre de motivation': student.description,
                 'adresse personnelle': student.address,
                 'adresse de l\'école': student.schoolAddress,
-                'description des ressources': student.resources
+                'description des ressources': student.resources,
+                'filière et établissement': student.studyField
             };
 
             for (const [context, value] of Object.entries(fieldsToValidate)) {
