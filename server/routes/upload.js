@@ -3,6 +3,7 @@ const router = express.Router();
 const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
 const streamifier = require('streamifier');
+const { validateDocumentWithAI } = require('../utils/aiValidation');
 
 // Configure Cloudinary (It will automatically use CLOUDINARY_URL if it exists in the environment)
 if (!process.env.CLOUDINARY_URL) {
@@ -50,6 +51,13 @@ router.post('/', (req, res) => {
         });
 
         try {
+            // --- AI DOCUMENT VALIDATION START ---
+            const aiCheck = await validateDocumentWithAI(req.file.buffer, req.file.mimetype);
+            if (!aiCheck.isValid) {
+                return res.status(400).json({ message: aiCheck.reason });
+            }
+            // --- AI DOCUMENT VALIDATION END ---
+
             // Use 'image' for both images and PDFs so Cloudinary can serve PDFs inline instead of forcing download
             const resourceType = 'image';
 

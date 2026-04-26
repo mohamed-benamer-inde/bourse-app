@@ -14,6 +14,9 @@ router.get('/', auth, async (req, res) => {
     }
 });
 
+const { checkContent } = require('../utils/contentFilter');
+const { validateWithAI } = require('../utils/aiValidation');
+
 // Update user profile
 router.put('/', auth, async (req, res) => {
     try {
@@ -21,6 +24,29 @@ router.put('/', auth, async (req, res) => {
             address, city, schoolAddress, phone, educationLevel, studyField, rsuTranche, resources, description,
             gradeCurrent, gradeN1, gradeN2, gradeN3, transcriptStatus
         } = req.body;
+
+        // --- MODERATION START ---
+        const fieldsToValidate = {
+            'lettre de motivation': description,
+            'adresse personnelle': address,
+            'adresse de l\'école': schoolAddress,
+            'description des ressources': resources
+        };
+
+        for (const [context, value] of Object.entries(fieldsToValidate)) {
+            if (value) {
+                const isSchool = context === 'adresse de l\'école';
+                const localCheck = checkContent(value, isSchool);
+                if (!localCheck.isValid) {
+                    return res.status(400).json({ message: `Champ "${context}" : ${localCheck.reason}` });
+                }
+                const aiCheck = await validateWithAI(value, context);
+                if (!aiCheck.isValid) {
+                    return res.status(400).json({ message: `Champ "${context}" : ${aiCheck.reason}` });
+                }
+            }
+        }
+        // --- MODERATION END ---
 
         const userFields = {};
         if (address) userFields.address = address;

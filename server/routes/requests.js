@@ -4,6 +4,8 @@ const auth = require('../middleware/auth');
 const Request = require('../models/Request');
 const User = require('../models/User');
 const { sendStatusEmail } = require('../utils/notifications');
+const { checkContent } = require('../utils/contentFilter');
+const { validateWithAI } = require('../utils/aiValidation');
 
 // Create a request (Student)
 router.post('/', auth, async (req, res) => {
@@ -160,6 +162,13 @@ router.put('/:id/status', auth, async (req, res) => {
             if ((request.status !== 'ANALYZING' && request.status !== 'INFO_RECEIVED') || request.donor.toString() !== req.user.id) return res.status(400).json({ message: 'Non autorisé' });
             
             if (req.body.data && req.body.data.message) {
+                // --- MODERATION START ---
+                const localCheck = checkContent(req.body.data.message);
+                if (!localCheck.isValid) return res.status(400).json({ message: localCheck.reason });
+                const aiCheck = await validateWithAI(req.body.data.message, 'message donateur');
+                if (!aiCheck.isValid) return res.status(400).json({ message: aiCheck.reason });
+                // --- MODERATION END ---
+
                 if (!request.exchanges) request.exchanges = [];
                 request.exchanges.push({
                     type: 'MESSAGE',
@@ -252,6 +261,13 @@ router.put('/:id/status', auth, async (req, res) => {
 
             // Add response to exchanges
             if (req.body.data && req.body.data.response) {
+                // --- MODERATION START ---
+                const localCheck = checkContent(req.body.data.response);
+                if (!localCheck.isValid) return res.status(400).json({ message: localCheck.reason });
+                const aiCheck = await validateWithAI(req.body.data.response, 'réponse étudiant');
+                if (!aiCheck.isValid) return res.status(400).json({ message: aiCheck.reason });
+                // --- MODERATION END ---
+
                 if (!request.exchanges) request.exchanges = [];
                 request.exchanges.push({
                     type: 'RESPONSE',
@@ -263,6 +279,27 @@ router.put('/:id/status', auth, async (req, res) => {
         // Student: DRAFT -> SUBMITTED
         else if (status === 'SUBMITTED' && req.user.role === 'student') {
             if (request.status !== 'DRAFT' || request.student.toString() !== req.user.id) return res.status(400).json({ message: 'Non autorisé' });
+
+            // --- FINAL MODERATION CHECK ---
+            const student = await User.findById(req.user.id);
+            const fieldsToValidate = {
+                'lettre de motivation': student.description,
+                'adresse personnelle': student.address,
+                'adresse de l\'école': student.schoolAddress,
+                'description des ressources': student.resources
+            };
+
+            for (const [context, value] of Object.entries(fieldsToValidate)) {
+                if (value) {
+                    const isSchool = context === 'adresse de l\'école';
+                    const localCheck = checkContent(value, isSchool);
+                    if (!localCheck.isValid) return res.status(400).json({ message: `Le dossier contient des informations non autorisées (${context}) : ${localCheck.reason}` });
+                    
+                    const aiCheck = await validateWithAI(value, context);
+                    if (!aiCheck.isValid) return res.status(400).json({ message: `Le dossier n'est pas prêt pour soumission (${context}) : ${aiCheck.reason}` });
+                }
+            }
+            // --- END FINAL CHECK ---
         }
         else {
             return res.status(400).json({ message: 'Action non autorisée ou statut invalide' });
