@@ -3,7 +3,7 @@ const router = express.Router();
 const auth = require('../middleware/auth');
 const Request = require('../models/Request');
 const User = require('../models/User');
-const { sendStatusEmail } = require('../utils/email');
+const { sendStatusEmail } = require('../utils/notifications');
 
 // Create a request (Student)
 router.post('/', auth, async (req, res) => {
