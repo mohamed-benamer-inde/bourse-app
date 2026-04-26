@@ -209,9 +209,21 @@ router.post('/forgot-password', async (req, res) => {
         const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password/${resetToken}`;
 
         const message = `
-            <h1>Vous avez demandé une réinitialisation de mot de passe</h1>
-            <p>Veuillez vous rendre sur ce lien pour réinitialiser votre mot de passe:</p>
-            <a href=${resetUrl} clicktracking=off>${resetUrl}</a>
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
+                <h2 style="color: #2563eb;">Réinitialisation de mot de passe</h2>
+                <p style="font-size: 16px; color: #475569; line-height: 1.5;">
+                    Vous avez demandé une réinitialisation de mot de passe. Veuillez cliquer sur le bouton ci-dessous pour procéder :
+                </p>
+                <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+                    <a href="${resetUrl}" 
+                       style="background-color: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                       Réinitialiser mon mot de passe
+                    </a>
+                </div>
+                <p style="font-size: 12px; color: #94a3b8; margin-top: 30px;">
+                    Si vous n'avez pas demandé cette réinitialisation, vous pouvez ignorer cet email.
+                </p>
+            </div>
         `;
 
         try {

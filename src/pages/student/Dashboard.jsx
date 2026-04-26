@@ -8,7 +8,9 @@ import { useData } from '@/context/DataContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Send, Upload, FileText, AlertCircle, CheckCircle, Clock, Search, ShieldCheck, Trash2 } from 'lucide-react';
+import { Send, Upload, FileText, AlertCircle, CheckCircle, Clock, Search, ShieldCheck, Trash2, Eye } from 'lucide-react';
+import { Modal } from '@/components/ui/modal';
+import { formatCurrency } from '@/config/constants';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { motion } from 'framer-motion';
 
@@ -19,6 +21,7 @@ const StudentDashboard = () => {
 
     const [responseMessage, setResponseMessage] = useState('');
     const [uploadLoading, setUploadLoading] = useState(false);
+    const [isViewModalOpen, setIsViewModalOpen] = useState(false);
 
     // Get current student request
     const myRequest = getStudentRequest(user?.id || user?._id);
@@ -123,7 +126,12 @@ const StudentDashboard = () => {
             <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                 <div>
                     <h1 className="text-3xl font-bold text-gray-900">Bonjour, {user?.name}</h1>
-                    <p className="text-muted-foreground mt-1">Suivez l'état d'avancement de votre demande de financement.</p>
+                    <div className="flex items-center gap-3 mt-1">
+                        <p className="text-muted-foreground">Suivez l'état d'avancement de votre demande.</p>
+                        <Button variant="ghost" size="sm" onClick={() => setIsViewModalOpen(true)} className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 h-8">
+                            <Eye className="h-4 w-4 mr-1" /> Voir mon dossier
+                        </Button>
+                    </div>
                 </div>
                 <div className="flex items-center gap-4 bg-gray-50 p-4 rounded-xl border border-gray-100">
                     <div className={`p-3 rounded-full ${currentStatus.color.replace('bg-', 'bg-').replace('500', '100').replace('600', '100').replace('700', '100').replace('900', '100')} ${currentStatus.color.replace('bg-', 'text-')}`}>
@@ -330,6 +338,71 @@ const StudentDashboard = () => {
                     </Card>
                 </div>
             </div>
+
+            {/* View Dossier Modal */}
+            <Modal isOpen={isViewModalOpen} onClose={() => setIsViewModalOpen(null)} title="Récapitulatif de votre Dossier">
+                <div className="space-y-6">
+                    <div className="flex justify-between items-center bg-gray-100 p-4 rounded-xl border">
+                        <div className="font-semibold text-lg">{user?.name}</div>
+                        <Badge className={`${statusInfo.color} text-white border-none`}>
+                            {statusInfo.label}
+                        </Badge>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                            <h3 className="font-semibold text-lg border-b pb-1 text-gray-700">Informations Personnelles</h3>
+                            <div className="grid grid-cols-3 gap-2 text-sm bg-gray-50 p-3 rounded-lg border">
+                                <span className="text-muted-foreground">Email :</span><span className="col-span-2">{user?.email}</span>
+                                <span className="text-muted-foreground">Téléphone :</span><span className="col-span-2">{user?.phone || 'Non renseigné'}</span>
+                                <span className="text-muted-foreground">Adresse :</span><span className="col-span-2">{user?.address}</span>
+                            </div>
+                        </div>
+                        <div className="space-y-2">
+                            <h3 className="font-semibold text-lg border-b pb-1 text-gray-700">Situation Académique</h3>
+                            <div className="grid grid-cols-3 gap-2 text-sm bg-gray-50 p-3 rounded-lg border">
+                                <span className="text-muted-foreground">Niveau :</span><span className="col-span-2 font-medium">{user?.educationLevel}</span>
+                                <span className="text-muted-foreground">Filière :</span><span className="col-span-2">{user?.studyField}</span>
+                                <span className="text-muted-foreground">Moyenne :</span><span className="col-span-2 font-bold text-blue-600">{user?.gradeCurrent}/20</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <h3 className="font-semibold text-lg border-b pb-1 text-gray-700">Situation Sociale & Motivation</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm mb-3">
+                            <div className="bg-blue-50 p-3 rounded-lg border border-blue-100"><span className="text-muted-foreground">Catégorie RSU :</span> <span className="font-bold ml-1">{user?.rsuTranche}</span></div>
+                            <div className="bg-blue-50 p-3 rounded-lg border border-blue-100"><span className="text-muted-foreground">Ressources :</span> <span className="font-bold ml-1">{formatCurrency(user?.resources)}</span></div>
+                        </div>
+                        <p className="bg-gray-50 p-4 rounded-xl text-sm italic border text-gray-700 leading-relaxed">
+                            "{user?.description}"
+                        </p>
+                    </div>
+
+                    {myRequest.needs && myRequest.needs.length > 0 && (
+                        <div className="space-y-2">
+                            <h3 className="font-semibold text-lg border-b pb-1 text-gray-700">Répartition des Besoins Financiers</h3>
+                            <div className="bg-white p-1 rounded-xl border shadow-sm">
+                                <ul className="divide-y">
+                                    {myRequest.needs.map((need, idx) => (
+                                        <li key={idx} className="flex justify-between items-center p-3 text-sm hover:bg-gray-50 transition-colors">
+                                            <div className="flex flex-col">
+                                                <span className="font-medium text-gray-800">{need.category}</span>
+                                                {need.description && <span className="text-xs text-muted-foreground italic">{need.description}</span>}
+                                            </div>
+                                            <span className="font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded">{formatCurrency(need.amount)}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                                <div className="flex justify-between items-center p-3 bg-gray-100 rounded-b-lg text-sm font-bold border-t">
+                                    <span>Total Demandé</span>
+                                    <span className="text-lg">{formatCurrency(myRequest.amountNeeded)}</span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </Modal>
         </div>
     );
 };

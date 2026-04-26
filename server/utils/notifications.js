@@ -34,7 +34,7 @@ const sendStatusEmail = async (studentEmail, studentName, newStatus) => {
                     ${messageText}
                 </p>
                 <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
-                    <a href="${process.env.FRONTEND_URL || 'https://bourse-front.onrender.com'}/student" 
+                    <a href="${process.env.FRONTEND_URL || 'https://bourse-frontend.onrender.com'}/login" 
                        style="background-color: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
                        Accéder à mon espace
                     </a>
