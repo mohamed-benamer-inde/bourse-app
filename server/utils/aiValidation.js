@@ -117,7 +117,15 @@ const validateDocumentWithAI = async (buffer, mimeType) => {
     try {
         // Note: PDFs might need conversion or different handling, but for images:
         const base64Image = buffer.toString("base64");
-        const prompt = "Analyse ce document. S'agit-il d'une pièce d'identité (CIN, Carte Nationale, Passeport, Permis de conduire) ? Réponds UNIQUEMENT au format JSON : { \"isIdCard\": boolean, \"reason\": \"string\" }. Si c'est un relevé de notes ou un certificat de scolarité, isIdCard doit être false.";
+        const prompt = `Analyse ce document. 
+        Est-il interdit ? Un document est INTERDIT s'il contient :
+        1. Une pièce d'identité (CIN, Passeport, Permis).
+        2. Des coordonnées bancaires (RIB, IBAN, numéro de carte).
+        3. Un numéro de téléphone personnel ou une adresse email.
+        4. Une adresse de domicile personnelle (l'adresse de l'école est autorisée).
+
+        Réponds UNIQUEMENT au format JSON : { "isForbidden": boolean, "reason": "string" }. 
+        Si c'est un relevé de notes ou un certificat de scolarité standard sans coordonnées bancaires, isForbidden doit être false.`;
         
         const response = await openai.chat.completions.create({
             model: modelName,
@@ -141,11 +149,11 @@ const validateDocumentWithAI = async (buffer, mimeType) => {
         const data = JSON.parse(response.choices[0].message.content);
         
         // Logging formatted AI response
-        console.log(`✅ AI VISION RESPONSE: isIdCard=${data.isIdCard} | Reason: ${data.reason}`);
+        console.log(`✅ AI VISION RESPONSE: isForbidden=${data.isForbidden} | Reason: ${data.reason}`);
         console.log("=".repeat(50) + "\n");
 
-        if (data.isIdCard) {
-            return { isValid: false, reason: "Les pièces d'identité (CIN/Passeport) ne sont pas autorisées pour protéger votre vie privée. Veuillez ne fournir que des documents académiques." };
+        if (data.isForbidden) {
+            return { isValid: false, reason: data.reason || "Ce document contient des informations personnelles non autorisées (CIN, RIB, Téléphone, etc.)." };
         }
         
         return { isValid: true };
