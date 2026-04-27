@@ -70,7 +70,7 @@ const validateWithAI = async (text, context = 'général') => {
             Réponds UNIQUEMENT au format JSON suivant :
             {
                 "score": number,
-                "reason": "Une explication courte en français si le score est bas"
+                "reason": "Une explication claire et pédagogique en français destinée à l'utilisateur pour qu'il comprenne pourquoi son texte a été refusé (ex: 'Merci de ne pas partager de numéro de téléphone pour votre sécurité')"
             }
         `;
 
@@ -125,6 +125,7 @@ const validateDocumentWithAI = async (buffer, mimeType) => {
         4. Une adresse de domicile personnelle (l'adresse de l'école est autorisée).
 
         Réponds UNIQUEMENT au format JSON : { "isForbidden": boolean, "reason": "string" }. 
+        La "reason" doit être un message clair destiné à l'utilisateur (ex: "Ce document est refusé car il contient un RIB visible").
         Si c'est un relevé de notes ou un certificat de scolarité standard sans coordonnées bancaires, isForbidden doit être false.`;
         
         const response = await openai.chat.completions.create({
