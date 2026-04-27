@@ -18,7 +18,8 @@ const forbiddenWords = [
  */
 const checkInsults = (text) => {
     if (!text) return { isValid: true };
-    const lowerText = text.toLowerCase();
+    const strText = String(text);
+    const lowerText = strText.toLowerCase();
     for (const word of forbiddenWords) {
         const regex = new RegExp(`\\b${word}\\b`, 'i');
         if (regex.test(lowerText)) {
@@ -45,9 +46,10 @@ const checkPhoneStrict = (phone) => {
 };
 
 const checkContent = (text) => {
-    if (!text) return { isValid: true };
+    if (!text && text !== 0) return { isValid: true };
 
-    const lowerText = text.toLowerCase();
+    const strText = String(text);
+    const lowerText = strText.toLowerCase();
 
     // 1. Check Insults FIRST
     const insultCheck = checkInsults(text);

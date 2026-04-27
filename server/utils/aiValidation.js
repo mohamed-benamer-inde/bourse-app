@@ -1,21 +1,27 @@
-const { GoogleGenerativeAI } = require("@google/generative-ai");
+const OpenAI = require("openai");
 const dotenv = require('dotenv');
 
 dotenv.config();
 
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
-const modelName = process.env.GEMINI_MODEL_NAME || "gemini-1.5-flash";
-const model = genAI.getGenerativeModel({ model: modelName });
+const openai = new OpenAI({
+  baseURL: "https://openrouter.ai/api/v1",
+  apiKey: process.env.OPENROUTER_API_KEY,
+  defaultHeaders: {
+    "HTTP-Referer": "https://bourseconnect.ma", // Optional, for OpenRouter rankings
+    "X-Title": "BourseConnect", // Optional
+  }
+});
+
+const modelName = process.env.OPENROUTER_MODEL || "google/gemini-2.0-flash-001";
 
 /**
- * Validates text relevance and detects hidden contact info using Gemini.
- * @param {string} text - The text to validate
- * @param {string} context - The context (e.g., 'motivation', 'message')
- * @returns {Promise<{isValid: boolean, reason: string}>}
+ * Validates text relevance and quality using OpenRouter (Gemini).
  */
 const validateWithAI = async (text, context = 'général') => {
     const minLength = context === 'lettre de motivation' ? 100 : 2;
-    if (!text || text.trim().length < minLength) {
+    const strText = String(text || '');
+    
+    if (!strText.trim() || strText.trim().length < minLength) {
         return { 
             isValid: false, 
             reason: context === 'lettre de motivation' 
@@ -44,7 +50,7 @@ const validateWithAI = async (text, context = 'général') => {
 
             Texte à analyser :
             """
-            ${text}
+            ${strText}
             """
             
             Réponds UNIQUEMENT au format JSON suivant :
@@ -54,64 +60,64 @@ const validateWithAI = async (text, context = 'général') => {
             }
         `;
 
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        const responseText = response.text();
+        const response = await openai.chat.completions.create({
+            model: modelName,
+            messages: [{ role: "user", content: prompt }],
+            response_format: { type: "json_object" }
+        });
+
+        const data = JSON.parse(response.choices[0].message.content);
+        const minScore = parseInt(process.env.MIN_QUALITY_SCORE) || 40;
         
-        // Extract JSON from response
-        const jsonMatch = responseText.match(/\{.*\}/s);
-        if (jsonMatch) {
-            const data = JSON.parse(jsonMatch[0]);
-            const minScore = parseInt(process.env.MIN_QUALITY_SCORE) || 40;
-            
-            return {
-                isValid: data.score >= minScore,
-                reason: data.score < minScore ? (data.reason || "La qualité du texte est insuffisante.") : "",
-                score: data.score
-            };
-        }
-        
-        return { isValid: true, score: 100 }; // Default to true if parsing fails
+        return {
+            isValid: data.score >= minScore,
+            reason: data.score < minScore ? (data.reason || "La qualité du texte est insuffisante.") : "",
+            score: data.score
+        };
     } catch (error) {
-        console.error("Gemini Validation Error:", error);
-        return { isValid: true };
+        console.error("OpenRouter Validation Error:", error);
+        return { isValid: true, score: 100 }; // Default to true if AI fails
     }
 };
 
 /**
  * Validates if an image/PDF is a prohibited document (ID card, Passport).
- * @param {Buffer} buffer - File buffer
- * @param {string} mimeType - File mime type
- * @returns {Promise<{isValid: boolean, reason: string}>}
  */
 const validateDocumentWithAI = async (buffer, mimeType) => {
     try {
+        // Note: PDFs might need conversion or different handling, but for images:
+        const base64Image = buffer.toString("base64");
         const prompt = "Analyse ce document. S'agit-il d'une pièce d'identité (CIN, Carte Nationale, Passeport, Permis de conduire) ? Réponds UNIQUEMENT au format JSON : { \"isIdCard\": boolean, \"reason\": \"string\" }. Si c'est un relevé de notes ou un certificat de scolarité, isIdCard doit être false.";
         
-        const result = await model.generateContent([
-            prompt,
-            {
-                inlineData: {
-                    data: buffer.toString("base64"),
-                    mimeType
+        const response = await openai.chat.completions.create({
+            model: modelName,
+            messages: [
+                {
+                    role: "user",
+                    content: [
+                        { type: "text", text: prompt },
+                        {
+                            type: "image_url",
+                            image_url: {
+                                url: `data:${mimeType};base64,${base64Image}`
+                            }
+                        }
+                    ]
                 }
-            }
-        ]);
+            ],
+            response_format: { type: "json_object" }
+        });
 
-        const responseText = await result.response.text();
-        const jsonMatch = responseText.match(/\{.*\}/s);
-        if (jsonMatch) {
-            const data = JSON.parse(jsonMatch[0]);
-            if (data.isIdCard) {
-                return { isValid: false, reason: "Les pièces d'identité (CIN/Passeport) ne sont pas autorisées pour protéger votre vie privée. Veuillez ne fournir que des documents académiques." };
-            }
+        const data = JSON.parse(response.choices[0].message.content);
+        if (data.isIdCard) {
+            return { isValid: false, reason: "Les pièces d'identité (CIN/Passeport) ne sont pas autorisées pour protéger votre vie privée. Veuillez ne fournir que des documents académiques." };
         }
+        
         return { isValid: true };
     } catch (error) {
-        console.error("Gemini Vision Error:", error);
+        console.error("OpenRouter Vision Error:", error);
         return { isValid: true }; // Allow if AI fails
     }
 };
 
 module.exports = { validateWithAI, validateDocumentWithAI };
-
