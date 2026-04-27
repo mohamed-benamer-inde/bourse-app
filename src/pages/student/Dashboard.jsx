@@ -21,6 +21,7 @@ const StudentDashboard = () => {
 
     const [responseMessage, setResponseMessage] = useState('');
     const [uploadLoading, setUploadLoading] = useState(false);
+    const [isSending, setIsSending] = useState(false);
     const [isViewModalOpen, setIsViewModalOpen] = useState(false);
 
     // Get current student request
@@ -40,17 +41,30 @@ const StudentDashboard = () => {
     }
 
     const handleSubmitResponse = async () => {
-        if (!responseMessage.trim()) return;
+        if (!responseMessage.trim() || isSending) return;
 
-        await updateRequestStatus(
-            myRequest._id,
-            'INFO_RECEIVED',
-            user?.id || user?._id,
-            user?.name,
-            { response: responseMessage }
-        );
+        setIsSending(true);
+        try {
+            const success = await updateRequestStatus(
+                myRequest._id,
+                'INFO_RECEIVED',
+                user?.id || user?._id,
+                user?.name,
+                { response: responseMessage }
+            );
 
-        setResponseMessage('');
+            if (success) {
+                setResponseMessage('');
+                // alert("Votre réponse a été envoyée avec succès.");
+            } else {
+                alert("Erreur lors de l'envoi. Votre message contient peut-être des informations non autorisées (téléphone, email) ou l'IA est indisponible.");
+            }
+        } catch (error) {
+            console.error("Submission error:", error);
+            alert("Une erreur est survenue lors de l'envoi.");
+        } finally {
+            setIsSending(false);
+        }
     };
 
     const handleDeleteDocument = async (docId) => {
@@ -198,8 +212,17 @@ const StudentDashboard = () => {
                                     <p className="text-xs text-orange-600 font-medium max-w-lg">
                                         Note : Soyez précis dans votre réponse. Vous pouvez également ajouter un document justificatif ci-dessous si cela répond à la demande.
                                     </p>
-                                    <Button onClick={handleSubmitResponse} disabled={!responseMessage.trim()} className="bg-orange-600 hover:bg-orange-700 w-full sm:w-auto">
-                                        <Send className="h-4 w-4 mr-2" /> Envoyer la réponse
+                                    <Button onClick={handleSubmitResponse} disabled={!responseMessage.trim() || isSending} className="bg-orange-600 hover:bg-orange-700 w-full sm:w-auto">
+                                        {isSending ? (
+                                            <>
+                                                <Activity className="animate-spin h-4 w-4 mr-2" />
+                                                Envoi...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Send className="h-4 w-4 mr-2" /> Envoyer la réponse
+                                            </>
+                                        )}
                                     </Button>
                                 </div>
                             </div>

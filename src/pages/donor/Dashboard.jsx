@@ -139,18 +139,31 @@ const DonorDashboard = () => {
     };
 
     const handleSubmitInfoRequest = async () => {
-        if (!infoRequestMessage.trim()) return;
+        if (!infoRequestMessage.trim() || isSending) return;
 
-        await updateRequestStatus(
-            currentRequestForInfo._id,
-            'REQUEST_INFO',
-            user?._id,
-            user?.name,
-            { message: infoRequestMessage }
-        );
+        setIsSending(true);
+        try {
+            const success = await updateRequestStatus(
+                currentRequestForInfo._id || currentRequestForInfo.id,
+                'REQUEST_INFO',
+                user?._id,
+                user?.name,
+                { message: infoRequestMessage }
+            );
 
-        setRequestInfoModalOpen(false);
-        setCurrentRequestForInfo(null);
+            if (success) {
+                setRequestInfoModalOpen(false);
+                setInfoRequestMessage('');
+                setCurrentRequestForInfo(null);
+            } else {
+                alert("Erreur lors de l'envoi. Le message contient peut-être des informations non autorisées ou l'IA est indisponible.");
+            }
+        } catch (error) {
+            console.error("Submission error:", error);
+            alert("Une erreur inattendue est survenue.");
+        } finally {
+            setIsSending(false);
+        }
     };
 
     if (loading && allRequests.length === 0) {
@@ -506,8 +519,13 @@ const DonorDashboard = () => {
                     />
                     <div className="flex justify-end gap-3 pt-2">
                         <Button variant="ghost" onClick={() => setRequestInfoModalOpen(false)}>Annuler</Button>
-                        <Button onClick={handleSubmitInfoRequest} disabled={!infoRequestMessage.trim()} className="bg-blue-600 hover:bg-blue-700">
-                            Envoyer le message
+                        <Button onClick={handleSubmitInfoRequest} disabled={!infoRequestMessage.trim() || isSending} className="bg-blue-600 hover:bg-blue-700">
+                            {isSending ? (
+                                <>
+                                    <Activity className="animate-spin h-4 w-4 mr-2" />
+                                    Envoi...
+                                </>
+                            ) : 'Envoyer le message'}
                         </Button>
                     </div>
                 </div>
