@@ -31,6 +31,13 @@ const validateWithAI = async (text, context = 'général') => {
         };
     }
 
+    // Logging formatted AI request
+    console.log("\n" + "=".repeat(50));
+    console.log(`🤖 AI REQUEST [${context.toUpperCase()}]`);
+    console.log("-".repeat(50));
+    console.log(`Input text: "${strText.substring(0, 100)}${strText.length > 100 ? '...' : ''}"`);
+    console.log("=".repeat(50));
+
     try {
         const prompt = `
             Tu es un modérateur expert pour une plateforme de bourses d'études au Maroc nommée BourseConnect.
@@ -70,13 +77,18 @@ const validateWithAI = async (text, context = 'général') => {
         const data = JSON.parse(response.choices[0].message.content);
         const minScore = parseInt(process.env.MIN_QUALITY_SCORE) || 40;
         
+        // Logging formatted AI response
+        console.log(`✅ AI RESPONSE: Score=${data.score}/100 | Reason: ${data.reason}`);
+        console.log("=".repeat(50) + "\n");
+
         return {
             isValid: data.score >= minScore,
             reason: data.score < minScore ? (data.reason || "La qualité du texte est insuffisante.") : "",
             score: data.score
         };
     } catch (error) {
-        console.error("OpenRouter Validation Error:", error);
+        console.error("❌ AI ERROR:", error.message);
+        console.log("=".repeat(50) + "\n");
         return { isValid: true, score: 100 }; // Default to true if AI fails
     }
 };
@@ -85,6 +97,17 @@ const validateWithAI = async (text, context = 'général') => {
  * Validates if an image/PDF is a prohibited document (ID card, Passport).
  */
 const validateDocumentWithAI = async (buffer, mimeType) => {
+    if (mimeType === 'application/pdf') {
+        console.log(`ℹ️ AI VISION SKIP: PDF non analysé (${mimeType})`);
+        return { isValid: true };
+    }
+
+    console.log("\n" + "=".repeat(50));
+    console.log(`👁️ AI VISION REQUEST`);
+    console.log("-".repeat(50));
+    console.log(`MimeType: ${mimeType}`);
+    console.log("=".repeat(50));
+
     try {
         // Note: PDFs might need conversion or different handling, but for images:
         const base64Image = buffer.toString("base64");
@@ -110,13 +133,19 @@ const validateDocumentWithAI = async (buffer, mimeType) => {
         });
 
         const data = JSON.parse(response.choices[0].message.content);
+        
+        // Logging formatted AI response
+        console.log(`✅ AI VISION RESPONSE: isIdCard=${data.isIdCard} | Reason: ${data.reason}`);
+        console.log("=".repeat(50) + "\n");
+
         if (data.isIdCard) {
             return { isValid: false, reason: "Les pièces d'identité (CIN/Passeport) ne sont pas autorisées pour protéger votre vie privée. Veuillez ne fournir que des documents académiques." };
         }
         
         return { isValid: true };
     } catch (error) {
-        console.error("OpenRouter Vision Error:", error);
+        console.error("❌ AI VISION ERROR:", error.message);
+        console.log("=".repeat(50) + "\n");
         return { isValid: true }; // Allow if AI fails
     }
 };

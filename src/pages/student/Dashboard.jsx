@@ -36,9 +36,12 @@ const StudentDashboard = () => {
         }
     }, [dataLoading, myRequest, navigate]);
 
-    if (dataLoading || !myRequest) {
+    if (dataLoading || !myRequest || !myRequest.status) {
         return <div className="flex items-center justify-center h-screen"><div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div></div>;
     }
+
+    const currentStatus = getStatusDetails(myRequest.status);
+    const StatusIcon = currentStatus.icon;
 
     const handleSubmitResponse = async () => {
         if (!responseMessage.trim() || isSending) return;
@@ -194,6 +197,29 @@ const StudentDashboard = () => {
                         <AlertCircle className="h-5 w-5 text-orange-600" />
                         <AlertTitle className="text-orange-800 text-lg">Action requise : Le donateur vous a écrit</AlertTitle>
                         <AlertDescription className="text-orange-700 mt-4 space-y-4">
+                            <div className="bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-100 p-5 rounded-2xl shadow-sm mb-4">
+                                <div className="flex items-center gap-3 mb-3">
+                                    <div className="bg-orange-600 p-2 rounded-lg shadow-orange-200 shadow-lg">
+                                        <ShieldCheck className="h-5 w-5 text-white" />
+                                    </div>
+                                    <h4 className="font-bold text-orange-900 tracking-tight">Pacte de Confiance</h4>
+                                </div>
+                                <ul className="space-y-2">
+                                    <li className="flex items-center gap-2 text-xs text-orange-800">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-orange-400"></div>
+                                        Ne partagez pas votre téléphone ou RIB ici.
+                                    </li>
+                                    <li className="flex items-center gap-2 text-xs text-orange-800">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-orange-400"></div>
+                                        Répondez avec sincérité et politesse.
+                                    </li>
+                                    <li className="flex items-center gap-2 text-xs text-orange-800">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-orange-400"></div>
+                                        L'IA modère les échanges pour protéger votre dossier.
+                                    </li>
+                                </ul>
+                            </div>
+
                             <div className="bg-white p-4 rounded-xl border border-orange-100 shadow-sm relative">
                                 <span className="absolute -top-3 left-4 bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded font-bold">Message du donateur</span>
                                 {myRequest.exchanges && myRequest.exchanges.length > 0

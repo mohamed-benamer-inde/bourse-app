@@ -255,7 +255,9 @@ router.put('/:id/status', auth, async (req, res) => {
                 });
 
                 await request.save();
-                return res.json(await Request.findById(request._id).populate('student', 'name email city'));
+                const partPopulated = await Request.findById(request._id)
+                    .populate('student', 'name email phone address city educationLevel studyField rsuTranche resources description gradeCurrent gradeN1 gradeN2 gradeN3 transcriptStatus');
+                return res.json(partPopulated);
             }
         }
         // Release (Donor cancels analysis): ANALYZING -> SUBMITTED
@@ -330,7 +332,7 @@ router.put('/:id/status', auth, async (req, res) => {
 
         await request.save();
         const populatedRequest = await Request.findById(request._id)
-            .populate('student', 'name email phone address educationLevel studyField rsuTranche resources description gradeCurrent gradeN1 gradeN2 gradeN3 transcriptStatus')
+            .populate('student', 'name email phone address city educationLevel studyField rsuTranche resources description gradeCurrent gradeN1 gradeN2 gradeN3 transcriptStatus')
             .populate('donor', 'name email');
 
         // Send Email Notification to Student asynchronously

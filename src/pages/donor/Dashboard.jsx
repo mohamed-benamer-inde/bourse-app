@@ -503,14 +503,27 @@ const DonorDashboard = () => {
 
             <Modal isOpen={requestInfoModalOpen} onClose={() => setRequestInfoModalOpen(false)} title="Demander des précisions">
                 <div className="space-y-4">
-                    <div className="bg-orange-50 border border-orange-200 p-4 rounded-xl flex items-start gap-3">
-                        <Activity className="h-5 w-5 text-orange-600 mt-0.5 flex-shrink-0" />
-                        <div>
-                            <p className="text-sm font-medium text-orange-800">Communication officielle</p>
-                            <p className="text-xs text-orange-700 mt-1">
-                                Utilisez cet espace uniquement pour réclamer des documents manquants ou des précisions sur le besoin financier. Les échanges sont modérés.
-                            </p>
+                    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 p-5 rounded-2xl shadow-sm">
+                        <div className="flex items-center gap-3 mb-3">
+                            <div className="bg-blue-600 p-2 rounded-lg shadow-blue-200 shadow-lg">
+                                <ShieldCheck className="h-5 w-5 text-white" />
+                            </div>
+                            <h4 className="font-bold text-blue-900 tracking-tight">Pacte de Confiance</h4>
                         </div>
+                        <ul className="space-y-2">
+                            <li className="flex items-center gap-2 text-xs text-blue-800">
+                                <div className="w-1.5 h-1.5 rounded-full bg-blue-400"></div>
+                                Pas de partage de coordonnées directes (téléphone, email).
+                            </li>
+                            <li className="flex items-center gap-2 text-xs text-blue-800">
+                                <div className="w-1.5 h-1.5 rounded-full bg-blue-400"></div>
+                                Respect mutuel et courtoisie dans les échanges.
+                            </li>
+                            <li className="flex items-center gap-2 text-xs text-blue-800">
+                                <div className="w-1.5 h-1.5 rounded-full bg-blue-400"></div>
+                                Les échanges sont modérés pour votre sécurité.
+                            </li>
+                        </ul>
                     </div>
                     <Textarea
                         placeholder="Bonjour, merci de fournir le relevé de notes du semestre précédent..."
