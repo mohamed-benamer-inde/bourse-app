@@ -50,6 +50,11 @@ const validateWithAI = async (text, context = 'général') => {
             4. INTERDIT : Insultes, contenu inapproprié ou texte aléatoire (ex: "asdfg").
             5. LANGUES : Accepte le Français, l'Arabe classique, et la Darija marocaine.
             6. INTERDIT : Toute suggestion de rencontre physique (ex: "rdv au café", "on se voit à l'hôtel", "viens chez moi", etc.). Les échanges doivent rester virtuels.
+            7. INTERDIT : Méthodes de paiement alternatives ou parallèles (ex: Western Union, Wafacash, CashPlus, carte cadeau, cryptomonnaies).
+            8. INTERDIT : Réseaux sociaux ou identifiants externes (ex: @Instagram, Facebook, TikTok, Snapchat).
+            9. INTERDIT : Harcèlement, chantage, ou demande de faveurs personnelles/sexuelles en échange d'aide (Tolérance Zéro).
+            10. INTERDIT : Se faire passer pour un administrateur ou un membre du staff de BourseConnect.
+            11. INTERDIT : Mendicité agressive, spam, ou messages sans aucun rapport avec les études.
             
             Attribue un score de qualité de 0 à 100 :
             - 0-30 : Inacceptable (insultes, n'importe quoi, coordonnées interdites).
