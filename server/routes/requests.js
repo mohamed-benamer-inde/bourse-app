@@ -302,7 +302,6 @@ router.put('/:id/status', auth, async (req, res) => {
             // 3. Free Text Fields
             const fieldsToValidate = {
                 'lettre de motivation': student.description,
-                'adresse personnelle': student.address,
                 'adresse de l\'école': student.schoolAddress,
                 'description des ressources': student.resources,
                 'filière et établissement': student.studyField

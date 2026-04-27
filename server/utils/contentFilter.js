@@ -20,7 +20,8 @@ const checkInsults = (text) => {
     if (!text) return { isValid: true };
     const lowerText = text.toLowerCase();
     for (const word of forbiddenWords) {
-        if (lowerText.includes(word)) {
+        const regex = new RegExp(`\\b${word}\\b`, 'i');
+        if (regex.test(lowerText)) {
             return { isValid: false, reason: "Contenu inapproprié détecté." };
         }
     }

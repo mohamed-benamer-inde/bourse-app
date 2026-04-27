@@ -27,15 +27,21 @@ const validateWithAI = async (text, context = 'général') => {
     try {
         const prompt = `
             Tu es un modérateur expert pour une plateforme de bourses d'études au Maroc nommée BourseConnect.
-            Évalue la pertinence et la sécurité du texte suivant fourni par un utilisateur dans le contexte : "${context}".
+            Évalue la pertinence et la qualité du texte suivant fourni par un utilisateur dans le contexte : "${context}".
             
             Règles strictes :
             1. Le texte doit être sérieux, cohérent et poli.
-            2. INTERDIT : Partage de coordonnées PERSONNELLES (téléphone, email, RIB, ou adresse du domicile précise).
-            3. AUTORISÉ : L'adresse de l'établissement scolaire ou de l'université est autorisée et nécessaire.
-            4. INTERDIT : Insultes, contenu inapproprié ou texte aléatoire (ex: "asdfg", "test test").
-            5. LANGUES : Accepte le Français, l'Arabe classique, et la Darija marocaine (même en caractères latins avec 3, 7, 9).
+            2. INTERDIT : Partage de coordonnées PERSONNELLES (téléphone, email, RIB).
+            3. AUTORISÉ : L'adresse de l'établissement scolaire ou de l'université.
+            4. INTERDIT : Insultes, contenu inapproprié ou texte aléatoire (ex: "asdfg").
+            5. LANGUES : Accepte le Français, l'Arabe classique, et la Darija marocaine.
             
+            Attribue un score de qualité de 0 à 100 :
+            - 0-30 : Inacceptable (insultes, n'importe quoi, coordonnées interdites).
+            - 31-50 : Faible qualité (trop court, peu sérieux, incohérent).
+            - 51-80 : Bonne qualité (clair et poli).
+            - 81-100 : Excellente qualité (très détaillé et convaincant).
+
             Texte à analyser :
             """
             ${text}
@@ -43,8 +49,8 @@ const validateWithAI = async (text, context = 'général') => {
             
             Réponds UNIQUEMENT au format JSON suivant :
             {
-                "isValid": boolean,
-                "reason": "Une explication courte en français si invalide, sinon vide"
+                "score": number,
+                "reason": "Une explication courte en français si le score est bas"
             }
         `;
 
@@ -52,13 +58,20 @@ const validateWithAI = async (text, context = 'général') => {
         const response = await result.response;
         const responseText = response.text();
         
-        // Extract JSON from response (Gemini might return markdown blocks)
+        // Extract JSON from response
         const jsonMatch = responseText.match(/\{.*\}/s);
         if (jsonMatch) {
-            return JSON.parse(jsonMatch[0]);
+            const data = JSON.parse(jsonMatch[0]);
+            const minScore = parseInt(process.env.MIN_QUALITY_SCORE) || 40;
+            
+            return {
+                isValid: data.score >= minScore,
+                reason: data.score < minScore ? (data.reason || "La qualité du texte est insuffisante.") : "",
+                score: data.score
+            };
         }
         
-        return { isValid: true }; // Default to true if parsing fails
+        return { isValid: true, score: 100 }; // Default to true if parsing fails
     } catch (error) {
         console.error("Gemini Validation Error:", error);
         return { isValid: true };

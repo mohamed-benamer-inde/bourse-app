@@ -41,7 +41,6 @@ router.put('/', auth, async (req, res) => {
         // 3. Free Text Fields Check
         const fieldsToValidate = {
             'lettre de motivation': description,
-            'adresse personnelle': address,
             'adresse de l\'école': schoolAddress,
             'description des ressources': resources,
             'filière et établissement': studyField
