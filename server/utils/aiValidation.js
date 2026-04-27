@@ -49,6 +49,7 @@ const validateWithAI = async (text, context = 'général') => {
             3. AUTORISÉ : L'adresse de l'établissement scolaire ou de l'université.
             4. INTERDIT : Insultes, contenu inapproprié ou texte aléatoire (ex: "asdfg").
             5. LANGUES : Accepte le Français, l'Arabe classique, et la Darija marocaine.
+            6. INTERDIT : Toute suggestion de rencontre physique (ex: "rdv au café", "on se voit à l'hôtel", "viens chez moi", etc.). Les échanges doivent rester virtuels.
             
             Attribue un score de qualité de 0 à 100 :
             - 0-30 : Inacceptable (insultes, n'importe quoi, coordonnées interdites).
