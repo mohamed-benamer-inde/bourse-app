@@ -64,6 +64,7 @@ const DonorDashboard = () => {
     const [needsContributions, setNeedsContributions] = useState({});
     const [infoRequestMessage, setInfoRequestMessage] = useState('');
     const [currentRequestForAction, setCurrentRequestForAction] = useState(null);
+    const [currentRequestForInfo, setCurrentRequestForInfo] = useState(null);
 
     // Filter Logic
     const isMyRequest = (req) => req.donor === user?._id || req.donor?._id === user?._id;
