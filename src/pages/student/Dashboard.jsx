@@ -48,23 +48,19 @@ const StudentDashboard = () => {
 
         setIsSending(true);
         try {
-            const success = await updateRequestStatus(
-                myRequest._id,
-                'INFO_RECEIVED',
-                user?.id || user?._id,
-                user?.name,
-                { response: responseMessage }
-            );
-
-            if (success) {
-                setResponseMessage('');
-                // alert("Votre réponse a été envoyée avec succès.");
-            } else {
-                alert("Erreur lors de l'envoi. Votre message contient peut-être des informations non autorisées (téléphone, email) ou l'IA est indisponible.");
-            }
+            await api.put(`/requests/${myRequest._id}/status`, {
+                status: 'INFO_RECEIVED',
+                data: { response: responseMessage }
+            });
+            
+            setResponseMessage('');
+            // Direct refresh like in the onboarding to be more robust
+            await refreshRequests();
+            alert("Votre réponse a été envoyée.");
         } catch (error) {
             console.error("Submission error:", error);
-            alert("Une erreur est survenue lors de l'envoi.");
+            const errorMsg = error.response?.data?.message || "Erreur lors de l'envoi.";
+            alert(errorMsg);
         } finally {
             setIsSending(false);
         }
@@ -353,7 +349,7 @@ const StudentDashboard = () => {
                                 </div>
                             )}
 
-                            {(!myRequest.status || ['SUBMITTED', 'REQUEST_INFO', 'ANALYZING'].includes(myRequest.status)) && (
+                            {(!myRequest.status || ['SUBMITTED', 'REQUEST_INFO', 'ANALYZING', 'INFO_RECEIVED', 'PARTIALLY_FUNDED'].includes(myRequest.status)) && (
                                 <div className="pt-2">
                                     <label className={`flex flex-col items-center justify-center w-full h-24 border-2 border-dashed rounded-lg cursor-pointer bg-white hover:bg-gray-50 transition-colors ${(myRequest.documents?.length >= 5 || uploadLoading) ? 'opacity-50 pointer-events-none' : 'border-blue-300'}`}>
                                         <div className="flex flex-col items-center justify-center">
