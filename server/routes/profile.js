@@ -52,10 +52,8 @@ router.put('/', auth, async (req, res) => {
                 if (!localCheck.isValid) {
                     return res.status(400).json({ message: `Champ "${context}" : ${localCheck.reason}` });
                 }
-                const aiCheck = await validateWithAI(value, context);
-                if (!aiCheck.isValid) {
-                    return res.status(400).json({ message: `Champ "${context}" : ${aiCheck.reason}` });
-                }
+                // AI validation REMOVED from profile save to save credits.
+                // It will be performed during final submission.
             }
         }
         // --- MODERATION END ---

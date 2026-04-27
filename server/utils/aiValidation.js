@@ -6,9 +6,10 @@ dotenv.config();
 const openai = new OpenAI({
   baseURL: "https://openrouter.ai/api/v1",
   apiKey: process.env.OPENROUTER_API_KEY,
+  timeout: 60000, // 60 seconds
   defaultHeaders: {
-    "HTTP-Referer": "https://bourseconnect.ma", // Optional, for OpenRouter rankings
-    "X-Title": "BourseConnect", // Optional
+    "HTTP-Referer": "https://bourseconnect.ma",
+    "X-Title": "BourseConnect",
   }
 });
 
