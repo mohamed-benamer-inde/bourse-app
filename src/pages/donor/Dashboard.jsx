@@ -66,6 +66,8 @@ const DonorDashboard = () => {
     const [currentRequestForAction, setCurrentRequestForAction] = useState(null);
     const [currentRequestForInfo, setCurrentRequestForInfo] = useState(null);
     const [isSending, setIsSending] = useState(false);
+    const [aiError, setAiError] = useState(null); // { message, originalText, context }
+    const [isReported, setIsReported] = useState(false);
 
     // Filter Logic
     const isMyRequest = (req) => req.donor === user?._id || req.donor?._id === user?._id;
@@ -157,7 +159,12 @@ const DonorDashboard = () => {
                 setInfoRequestMessage('');
                 setCurrentRequestForInfo(null);
             } else {
-                alert(result.message || "Erreur lors de l'envoi. Le message contient peut-être des informations non autorisées.");
+                setAiError({
+                    message: result.message || "Erreur lors de l'envoi. Le message contient peut-être des informations non autorisées.",
+                    originalText: infoRequestMessage,
+                    context: "Demande de précisions (Donateur)"
+                });
+                setIsReported(false);
             }
         } catch (error) {
             console.error("Submission error:", error);
@@ -624,6 +631,46 @@ const DonorDashboard = () => {
                                 Valider le financement
                             </Button>
                         </div>
+                    </div>
+                </div>
+            </Modal>
+
+            {/* AI Error & Feedback Modal */}
+            <Modal isOpen={!!aiError} onClose={() => setAiError(null)} title="Message refusé par l'IA">
+                <div className="space-y-4">
+                    <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded text-sm text-red-800">
+                        <p className="font-bold mb-2">Motif du refus :</p>
+                        <p>{aiError?.message}</p>
+                    </div>
+                    
+                    <p className="text-sm text-gray-600">
+                        Notre intelligence artificielle analyse tous les échanges pour protéger vos données personnelles et éviter les fraudes.
+                    </p>
+
+                    {isReported ? (
+                        <div className="bg-green-50 text-green-700 p-3 rounded-xl border border-green-200 text-center text-sm font-medium">
+                            Merci ! Votre signalement a été envoyé à l'équipe.
+                        </div>
+                    ) : (
+                        <div className="bg-gray-50 border p-4 rounded-xl space-y-3">
+                            <p className="text-xs text-gray-500">
+                                Pensez-vous que l'IA a fait une erreur ou a été trop stricte (ex: blocage légitime de demande de scolarité) ?
+                            </p>
+                            <Button 
+                                variant="outline" 
+                                className="w-full border-red-200 text-red-600 hover:bg-red-50"
+                                onClick={async () => {
+                                    const success = await submitAIFeedback(aiError.originalText, aiError.message, aiError.context);
+                                    if(success) setIsReported(true);
+                                }}
+                            >
+                                Signaler ce refus comme "Faux Positif"
+                            </Button>
+                        </div>
+                    )}
+
+                    <div className="flex justify-end pt-2">
+                        <Button variant="default" onClick={() => setAiError(null)}>J'ai compris, je vais modifier mon texte</Button>
                     </div>
                 </div>
             </Modal>

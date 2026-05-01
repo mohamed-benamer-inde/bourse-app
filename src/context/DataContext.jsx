@@ -85,8 +85,18 @@ export const DataProvider = ({ children }) => {
         return requests;
     };
 
+    const submitAIFeedback = async (originalText, aiReason, context = 'général') => {
+        try {
+            await api.post('/feedback/ai', { originalText, aiReason, context });
+            return true;
+        } catch (err) {
+            console.error("Error submitting AI feedback", err);
+            return false;
+        }
+    };
+
     return (
-        <DataContext.Provider value={{ requests, updateRequestStatus, createRequest, getStudentRequest, getDonorRequests, refreshRequests, loading }}>
+        <DataContext.Provider value={{ requests, updateRequestStatus, createRequest, getStudentRequest, getDonorRequests, submitAIFeedback, refreshRequests, loading }}>
             {children}
         </DataContext.Provider>
     );

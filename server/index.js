@@ -100,6 +100,7 @@ app.use('/api/requests', require('./routes/requests'));
 app.use('/api/profile', require('./routes/profile'));
 app.use('/api/upload', require('./routes/upload'));
 app.use('/api/admin', require('./routes/admin'));
+app.use('/api/feedback', require('./routes/feedback'));
 
 // Serve files from MongoDB (Protected)
 const File = require('./models/File');

@@ -27,6 +27,7 @@ const AdminDashboard = () => {
     const { user } = useAuth();
     const [users, setUsers] = useState([]);
     const [requests, setRequests] = useState([]);
+    const [feedbacks, setFeedbacks] = useState([]);
     const [loading, setLoading] = useState(true);
     const [newAdmin, setNewAdmin] = useState({ name: '', email: '', password: '' });
 
@@ -47,6 +48,7 @@ const AdminDashboard = () => {
     useEffect(() => {
         fetchUsers();
         fetchRequests();
+        fetchFeedbacks();
     }, []);
 
     const fetchUsers = async () => {
@@ -66,6 +68,15 @@ const AdminDashboard = () => {
             console.error("Error fetching requests", err);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchFeedbacks = async () => {
+        try {
+            const res = await api.get('/feedback/ai');
+            setFeedbacks(res.data);
+        } catch (err) {
+            console.error("Error fetching AI feedbacks", err);
         }
     };
 
@@ -143,6 +154,17 @@ const AdminDashboard = () => {
         } catch (err) {
             console.error("Error deleting document", err);
             alert("Erreur suppression document");
+        }
+    };
+
+    // --- FEEDBACK ACTIONS ---
+    const handleUpdateFeedbackStatus = async (feedbackId, status) => {
+        try {
+            const res = await api.put(`/feedback/ai/${feedbackId}/status`, { status });
+            setFeedbacks(feedbacks.map(f => f._id === feedbackId ? res.data : f));
+        } catch (err) {
+            console.error("Error updating feedback status", err);
+            alert("Erreur lors de la mise à jour");
         }
     };
 
@@ -344,6 +366,7 @@ const AdminDashboard = () => {
                         <TabsTrigger value="requests">Dossiers ({requests.length})</TabsTrigger>
                         <TabsTrigger value="users">Utilisateurs ({users.length})</TabsTrigger>
                         <TabsTrigger value="donors">Validations Donateurs {pendingDonors.length > 0 && <Badge variant="destructive" className="ml-2 px-1.5 py-0">{pendingDonors.length}</Badge>}</TabsTrigger>
+                        <TabsTrigger value="ai-feedback">Modération IA {feedbacks.filter(f => f.status === 'pending').length > 0 && <Badge variant="destructive" className="ml-2 px-1.5 py-0">{feedbacks.filter(f => f.status === 'pending').length}</Badge>}</TabsTrigger>
                         <TabsTrigger value="admins">Gestion Admins</TabsTrigger>
                     </TabsList>
 
@@ -478,6 +501,60 @@ const AdminDashboard = () => {
                                     <div className="text-center py-12">
                                         <CheckCircle className="h-12 w-12 text-green-200 mx-auto mb-4" />
                                         <p className="text-lg text-muted-foreground font-medium">Tous les donateurs sont validés.</p>
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+
+                    <TabsContent value="ai-feedback">
+                        <Card className="border-none shadow-md bg-white/90 backdrop-blur">
+                            <CardHeader><CardTitle className="text-xl flex items-center"><Shield className="w-5 h-5 mr-2 text-red-500" /> Faux Positifs signalés (IA)</CardTitle></CardHeader>
+                            <CardContent>
+                                {feedbacks.length > 0 ? (
+                                    <div className="space-y-4">
+                                        {feedbacks.map(feedback => (
+                                            <div key={feedback._id} className={`p-4 border rounded-xl shadow-sm transition-colors ${feedback.status === 'pending' ? 'bg-red-50 border-red-100' : 'bg-gray-50 opacity-75'}`}>
+                                                <div className="flex justify-between items-start mb-2">
+                                                    <div>
+                                                        <span className="font-bold">{feedback.userId?.name || 'Inconnu'}</span> 
+                                                        <Badge variant="outline" className="ml-2 text-xs">{feedback.userRole}</Badge>
+                                                        <span className="text-xs text-muted-foreground ml-2">{new Date(feedback.createdAt).toLocaleString()}</span>
+                                                    </div>
+                                                    <Badge className={
+                                                        feedback.status === 'pending' ? 'bg-red-500' : 
+                                                        feedback.status === 'reviewed' ? 'bg-green-500' : 'bg-gray-500'
+                                                    }>
+                                                        {feedback.status}
+                                                    </Badge>
+                                                </div>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+                                                    <div className="bg-white p-3 rounded border">
+                                                        <span className="text-xs font-bold text-gray-500 uppercase">Texte original bloqué ({feedback.context})</span>
+                                                        <p className="mt-1 text-sm italic">"{feedback.originalText}"</p>
+                                                    </div>
+                                                    <div className="bg-white p-3 rounded border border-red-200">
+                                                        <span className="text-xs font-bold text-red-500 uppercase">Raison donnée par l'IA</span>
+                                                        <p className="mt-1 text-sm font-medium text-red-900">{feedback.aiReason}</p>
+                                                    </div>
+                                                </div>
+                                                {feedback.status === 'pending' && (
+                                                    <div className="mt-4 flex gap-2 justify-end">
+                                                        <Button variant="outline" className="border-gray-300 hover:bg-gray-100" onClick={() => handleUpdateFeedbackStatus(feedback._id, 'ignored')}>
+                                                            L'IA avait raison (Ignorer)
+                                                        </Button>
+                                                        <Button className="bg-green-600 hover:bg-green-700" onClick={() => handleUpdateFeedbackStatus(feedback._id, 'reviewed')}>
+                                                            <CheckCircle className="h-4 w-4 mr-2" /> Vrai faux-positif (Marquer comme lu)
+                                                        </Button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-12">
+                                        <CheckCircle className="h-12 w-12 text-gray-200 mx-auto mb-4" />
+                                        <p className="text-lg text-muted-foreground font-medium">Aucun signalement de l'IA pour le moment.</p>
                                     </div>
                                 )}
                             </CardContent>
