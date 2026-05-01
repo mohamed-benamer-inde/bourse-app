@@ -56,10 +56,10 @@ export const DataProvider = ({ children }) => {
                 }
                 return req;
             }));
-            return true;
+            return { success: true };
         } catch (err) {
             console.error("Error updating status", err);
-            return false;
+            return { success: false, message: err.response?.data?.message || "Une erreur inattendue est survenue." };
         }
     };
 

@@ -144,7 +144,7 @@ const DonorDashboard = () => {
 
         setIsSending(true);
         try {
-            const success = await updateRequestStatus(
+            const result = await updateRequestStatus(
                 currentRequestForInfo._id || currentRequestForInfo.id,
                 'REQUEST_INFO',
                 user?._id,
@@ -152,12 +152,12 @@ const DonorDashboard = () => {
                 { message: infoRequestMessage }
             );
 
-            if (success) {
+            if (result.success) {
                 setRequestInfoModalOpen(false);
                 setInfoRequestMessage('');
                 setCurrentRequestForInfo(null);
             } else {
-                alert("Erreur lors de l'envoi. Le message contient peut-être des informations non autorisées ou l'IA est indisponible.");
+                alert(result.message || "Erreur lors de l'envoi. Le message contient peut-être des informations non autorisées.");
             }
         } catch (error) {
             console.error("Submission error:", error);
@@ -607,14 +607,18 @@ const DonorDashboard = () => {
                                 disabled={Object.values(needsContributions).reduce((a, b) => a + b, 0) <= 0}
                                 onClick={async () => {
                                     const total = Object.values(needsContributions).reduce((a, b) => a + b, 0);
-                                    await updateRequestStatus(
+                                    const result = await updateRequestStatus(
                                         currentRequestForAction._id, 
                                         'VALIDATED', 
                                         user?._id, 
                                         user?.name,
                                         { contribution: total }
                                     );
-                                    setValidationModalOpen(false);
+                                    if (result.success) {
+                                        setValidationModalOpen(false);
+                                    } else {
+                                        alert(result.message || "Erreur lors de la validation.");
+                                    }
                                 }}
                             >
                                 Valider le financement
