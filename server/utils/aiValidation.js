@@ -55,6 +55,7 @@ const validateWithAI = async (text, context = 'général') => {
             9. INTERDIT : Harcèlement, chantage, ou demande de faveurs personnelles/sexuelles en échange d'aide (Tolérance Zéro).
             10. INTERDIT : Se faire passer pour un administrateur ou un membre du staff de BourseConnect.
             11. INTERDIT : Mendicité agressive, spam, ou messages sans aucun rapport avec les études.
+            12. EXCEPTION MAJEURE : Les demandes de documents académiques (ex: relevés de notes, attestations de scolarité, reçus de paiement d'école, justificatifs RSU) sont TOTALEMENT AUTORISÉES et ENCOURAGÉES. Ce sont des pièces justificatives légitimes nécessaires à la plateforme.
             
             Attribue un score de qualité de 0 à 100 :
             - 0-30 : Inacceptable (insultes, n'importe quoi, coordonnées interdites).
