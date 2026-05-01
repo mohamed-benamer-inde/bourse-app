@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Search, CheckCircle, DollarSign, Lock, Eye, Users, TrendingUp, ChevronUp, ChevronDown, Activity } from 'lucide-react';
+import { Search, CheckCircle, DollarSign, Lock, Eye, Users, TrendingUp, ChevronUp, ChevronDown, Activity, ShieldCheck } from 'lucide-react';
 import { formatCurrency } from '@/config/constants';
 import { useData } from '@/context/DataContext';
 import { useAuth } from '@/context/AuthContext';
