@@ -87,10 +87,11 @@ router.post('/register', async (req, res) => {
                 if (err) throw err;
                 
                 // Set httpOnly cookie
+                const isProduction = process.env.NODE_ENV === 'production';
                 res.cookie('token', token, {
                     httpOnly: true,
-                    secure: process.env.NODE_ENV === 'production' || true, // Render requires true for sameSite none
-                    sameSite: 'none',
+                    secure: isProduction,
+                    sameSite: isProduction ? 'none' : 'lax',
                     maxAge: 24 * 60 * 60 * 1000 // 24 hours
                 });
 
@@ -161,10 +162,11 @@ router.post('/login', async (req, res) => {
                 if (err) throw err;
                 
                 // Set httpOnly cookie
+                const isProduction = process.env.NODE_ENV === 'production';
                 res.cookie('token', token, {
                     httpOnly: true,
-                    secure: process.env.NODE_ENV === 'production' || true, // Render requires true for sameSite none
-                    sameSite: 'none',
+                    secure: isProduction,
+                    sameSite: isProduction ? 'none' : 'lax',
                     maxAge: 24 * 60 * 60 * 1000 // 24 hours
                 });
 
