@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, ShieldCheck, MapPin, Target, Sparkles, HandHeart, ChevronRight, ChevronDown, ArrowRight, Quote } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Users, ShieldCheck, MapPin, Target, Sparkles, HandHeart, ChevronRight, ChevronDown, ArrowRight, Quote, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const FAQItem = ({ question, answer }) => {
@@ -108,6 +109,16 @@ const Landing = () => {
                                 <HandHeart className="mr-2 h-5 w-5" /> Devenir Mécène
                             </Button>
                         </Link>
+                    </motion.div>
+
+                    <motion.div variants={itemVariants} className="pt-10 max-w-2xl mx-auto text-left">
+                        <Alert className="bg-blue-50/60 border-blue-200 shadow-sm backdrop-blur-md">
+                            <Info className="h-5 w-5 text-blue-600" />
+                            <AlertTitle className="text-blue-900 font-bold text-lg">100% Direct, 0% Intermédiaire Financier</AlertTitle>
+                            <AlertDescription className="text-blue-800 mt-2 leading-relaxed">
+                                <strong>L'argent ne transite jamais par BourseConnect.</strong> Les dons se font <strong>directement</strong> entre le mécène et l'étudiant. Notre rôle exclusif est de sécuriser l'étude des dossiers, de vérifier les justificatifs et de simplifier la mise en relation.
+                            </AlertDescription>
+                        </Alert>
                     </motion.div>
                 </motion.div>
             </section>
@@ -303,7 +314,11 @@ const Landing = () => {
                         />
                         <FAQItem 
                             question="L'étudiant reçoit-il l'argent directement ?" 
-                            answer="Une fois que vous validez un financement, vous êtes mis en relation (via la plateforme) pour effectuer le don de manière sécurisée (virement, dépôt...). L'étudiant doit ensuite confirmer la réception pour clôturer le dossier." 
+                            answer="Oui, totalement. L'argent ne transite jamais par BourseConnect. Une fois que vous validez un financement, vous êtes mis en relation avec l'étudiant pour effectuer le don de manière sécurisée (virement bancaire, transfert...). L'étudiant doit ensuite confirmer la réception sur la plateforme pour clôturer le dossier." 
+                        />
+                        <FAQItem 
+                            question="BourseConnect prend-il une commission ?" 
+                            answer="Non, absolument aucune. Notre rôle est uniquement social et technologique : vérifier les dossiers, valider la bonne foi des demandes, et mettre en relation mécènes et étudiants. L'intégralité de votre don va à l'étudiant." 
                         />
                     </div>
                 </div>
