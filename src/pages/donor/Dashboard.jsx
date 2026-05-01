@@ -74,8 +74,8 @@ const DonorDashboard = () => {
         return allRequests.filter(req => (req.status === 'SUBMITTED' || req.status === 'PARTIALLY_FUNDED') && !isMyRequest(req))
             .filter(req => 
                 searchTerm === '' || 
-                req.student?.studyField?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                req.student?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+                (req.student?.studyField || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                (req.student?.name || '').toLowerCase().includes(searchTerm.toLowerCase())
             );
     }, [allRequests, searchTerm, user]);
 
@@ -83,7 +83,7 @@ const DonorDashboard = () => {
         let filtered = allRequests.filter(req => isMyRequest(req))
             .filter(req => 
                 searchTerm === '' || 
-                req.student?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+                (req.student?.name || '').toLowerCase().includes(searchTerm.toLowerCase())
             );
 
         return filtered.sort((a, b) => {
