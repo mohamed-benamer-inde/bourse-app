@@ -14,6 +14,20 @@ import { formatCurrency } from '@/config/constants';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { motion } from 'framer-motion';
 
+const getStatusDetails = (status) => {
+    switch (status) {
+        case 'SUBMITTED': return { label: 'Soumis', color: 'bg-blue-500', icon: Clock, desc: 'Dossier en attente de prise en charge par un donateur.' };
+        case 'ANALYZING': return { label: 'En Analyse', color: 'bg-yellow-500', icon: Search, desc: 'Un donateur étudie actuellement votre dossier.' };
+        case 'REQUEST_INFO': return { label: 'Info Demandée', color: 'bg-orange-500', icon: AlertCircle, desc: 'Le donateur a besoin de précisions.' };
+        case 'INFO_RECEIVED': return { label: 'Réponse envoyée', color: 'bg-blue-600', icon: Send, desc: 'En attente du retour du donateur.' };
+        case 'VALIDATED': return { label: 'Validé', color: 'bg-purple-500', icon: ShieldCheck, desc: 'Félicitations, votre demande est validée !' };
+        case 'ACCEPTED': return { label: 'Accepté', color: 'bg-green-500', icon: CheckCircle, desc: 'Vous avez accepté la proposition.' };
+        case 'PAID': return { label: 'Payé', color: 'bg-green-700', icon: CheckCircle, desc: 'Les fonds ont été transférés.' };
+        case 'CONFIRMED': return { label: 'Clôturé', color: 'bg-green-900', icon: CheckCircle, desc: 'Dossier finalisé avec succès.' };
+        default: return { label: 'Inconnu', color: 'bg-gray-500', icon: Clock, desc: '...' };
+    }
+};
+
 const StudentDashboard = () => {
     const { user } = useAuth();
     const { getStudentRequest, updateRequestStatus, refreshRequests, loading: dataLoading } = useData();
@@ -116,23 +130,6 @@ const StudentDashboard = () => {
             e.target.value = null;
         }
     };
-
-    const getStatusDetails = (status) => {
-        switch (status) {
-            case 'SUBMITTED': return { label: 'Soumis', color: 'bg-blue-500', icon: Clock, desc: 'Dossier en attente de prise en charge par un donateur.' };
-            case 'ANALYZING': return { label: 'En Analyse', color: 'bg-yellow-500', icon: Search, desc: 'Un donateur étudie actuellement votre dossier.' };
-            case 'REQUEST_INFO': return { label: 'Info Demandée', color: 'bg-orange-500', icon: AlertCircle, desc: 'Le donateur a besoin de précisions.' };
-            case 'INFO_RECEIVED': return { label: 'Réponse envoyée', color: 'bg-blue-600', icon: Send, desc: 'En attente du retour du donateur.' };
-            case 'VALIDATED': return { label: 'Validé', color: 'bg-purple-500', icon: ShieldCheck, desc: 'Félicitations, votre demande est validée !' };
-            case 'ACCEPTED': return { label: 'Accepté', color: 'bg-green-500', icon: CheckCircle, desc: 'Vous avez accepté la proposition.' };
-            case 'PAID': return { label: 'Payé', color: 'bg-green-700', icon: CheckCircle, desc: 'Les fonds ont été transférés.' };
-            case 'CONFIRMED': return { label: 'Clôturé', color: 'bg-green-900', icon: CheckCircle, desc: 'Dossier finalisé avec succès.' };
-            default: return { label: 'Inconnu', color: 'bg-gray-500', icon: Clock, desc: '...' };
-        }
-    };
-
-    const currentStatus = getStatusDetails(myRequest.status);
-    const StatusIcon = currentStatus.icon;
 
     return (
         <div className="container mx-auto px-4 py-8 space-y-8 max-w-5xl">
