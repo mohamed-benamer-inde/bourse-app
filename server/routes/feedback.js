@@ -35,7 +35,7 @@ router.post('/ai', auth, async (req, res) => {
 // Get all AI feedback reports (Admin only)
 router.get('/ai', auth, async (req, res) => {
     try {
-        if (req.user.role !== 'admin') {
+        if (req.user.role !== 'admin' && req.user.role !== 'superadmin') {
             return res.status(403).json({ message: 'Accès non autorisé' });
         }
 
@@ -51,7 +51,7 @@ router.get('/ai', auth, async (req, res) => {
 // Update feedback status (Admin only)
 router.put('/ai/:id/status', auth, async (req, res) => {
     try {
-        if (req.user.role !== 'admin') {
+        if (req.user.role !== 'admin' && req.user.role !== 'superadmin') {
             return res.status(403).json({ message: 'Accès non autorisé' });
         }
 
