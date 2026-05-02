@@ -50,7 +50,7 @@ const getStatusBadge = (status) => {
 
 const DonorDashboard = () => {
     const { user } = useAuth();
-    const { getDonorRequests, updateRequestStatus, loading } = useData();
+    const { getDonorRequests, updateRequestStatus, submitAIFeedback, loading } = useData();
     const allRequests = getDonorRequests();
     
     // State
