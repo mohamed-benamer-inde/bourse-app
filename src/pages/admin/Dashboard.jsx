@@ -28,6 +28,7 @@ const AdminDashboard = () => {
     const [users, setUsers] = useState([]);
     const [requests, setRequests] = useState([]);
     const [feedbacks, setFeedbacks] = useState([]);
+    const [analytics, setAnalytics] = useState(null);
     const [loading, setLoading] = useState(true);
     const [newAdmin, setNewAdmin] = useState({ name: '', email: '', password: '' });
 
@@ -49,6 +50,7 @@ const AdminDashboard = () => {
         fetchUsers();
         fetchRequests();
         fetchFeedbacks();
+        fetchAnalytics();
     }, []);
 
     const fetchUsers = async () => {
@@ -77,6 +79,15 @@ const AdminDashboard = () => {
             setFeedbacks(res.data);
         } catch (err) {
             console.error("Error fetching AI feedbacks", err);
+        }
+    };
+
+    const fetchAnalytics = async () => {
+        try {
+            const res = await api.get('/admin/analytics');
+            setAnalytics(res.data);
+        } catch (err) {
+            console.error("Error fetching analytics", err);
         }
     };
 
@@ -367,6 +378,7 @@ const AdminDashboard = () => {
                         <TabsTrigger value="users">Utilisateurs ({users.length})</TabsTrigger>
                         <TabsTrigger value="donors">Validations Donateurs {pendingDonors.length > 0 && <Badge variant="destructive" className="ml-2 px-1.5 py-0">{pendingDonors.length}</Badge>}</TabsTrigger>
                         <TabsTrigger value="ai-feedback">Modération IA {feedbacks.filter(f => f.status === 'pending').length > 0 && <Badge variant="destructive" className="ml-2 px-1.5 py-0">{feedbacks.filter(f => f.status === 'pending').length}</Badge>}</TabsTrigger>
+                        <TabsTrigger value="analytics">Analytiques <Badge className="ml-2 bg-blue-100 text-blue-800">Nouveau</Badge></TabsTrigger>
                         <TabsTrigger value="admins">Gestion Admins</TabsTrigger>
                     </TabsList>
 
@@ -559,6 +571,97 @@ const AdminDashboard = () => {
                                 )}
                             </CardContent>
                         </Card>
+                    </TabsContent>
+
+                    <TabsContent value="analytics" className="space-y-6">
+                        {analytics ? (
+                            <>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <Card className="border-none shadow-md bg-white/90 backdrop-blur border-t-4 border-t-blue-500">
+                                        <CardContent className="pt-6 flex flex-col items-center justify-center text-center">
+                                            <div className="p-3 bg-blue-50 text-blue-600 rounded-full mb-3"><Users className="w-6 h-6" /></div>
+                                            <p className="text-sm font-medium text-gray-500 mb-1">Engagement Donateurs</p>
+                                            <h2 className="text-3xl font-bold text-gray-900">{analytics.donorEngagementRate}%</h2>
+                                            <p className="text-xs text-gray-400 mt-2">{analytics.activeDonors} actifs sur {analytics.totalValidatedDonors} validés</p>
+                                        </CardContent>
+                                    </Card>
+
+                                    <Card className="border-none shadow-md bg-white/90 backdrop-blur border-t-4 border-t-green-500">
+                                        <CardContent className="pt-6 flex flex-col items-center justify-center text-center">
+                                            <div className="p-3 bg-green-50 text-green-600 rounded-full mb-3"><Activity className="w-6 h-6" /></div>
+                                            <p className="text-sm font-medium text-gray-500 mb-1">Vélocité de Financement</p>
+                                            <h2 className="text-3xl font-bold text-gray-900">{analytics.avgFundingTimeDays} <span className="text-xl">jours</span></h2>
+                                            <p className="text-xs text-gray-400 mt-2">Délai moyen entre le dépôt et le paiement</p>
+                                        </CardContent>
+                                    </Card>
+
+                                    <Card className="border-none shadow-md bg-white/90 backdrop-blur border-t-4 border-t-purple-500">
+                                        <CardContent className="pt-6 flex flex-col items-center justify-center text-center">
+                                            <div className="p-3 bg-purple-50 text-purple-600 rounded-full mb-3"><Shield className="w-6 h-6" /></div>
+                                            <p className="text-sm font-medium text-gray-500 mb-1">Précision de l'IA</p>
+                                            <h2 className="text-3xl font-bold text-gray-900">{analytics.aiAccuracyRate}%</h2>
+                                            <p className="text-xs text-gray-400 mt-2">Basé sur {analytics.totalResolvedReports} faux positifs audités</p>
+                                        </CardContent>
+                                    </Card>
+                                </div>
+
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                    <Card className="border-none shadow-md bg-white/90 backdrop-blur">
+                                        <CardHeader><CardTitle className="text-lg">Tendances des Besoins</CardTitle></CardHeader>
+                                        <CardContent className="h-[300px]">
+                                            {analytics.topNeeds && analytics.topNeeds.length > 0 ? (
+                                                <ResponsiveContainer width="100%" height="100%">
+                                                    <BarChart data={analytics.topNeeds} layout="vertical" margin={{ left: 20 }}>
+                                                        <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
+                                                        <XAxis type="number" hide />
+                                                        <YAxis dataKey="name" type="category" width={100} tick={{ fontSize: 12 }} />
+                                                        <RechartsTooltip cursor={{fill: 'transparent'}} />
+                                                        <Bar dataKey="value" fill="#8b5cf6" radius={[0, 4, 4, 0]} barSize={20} />
+                                                    </BarChart>
+                                                </ResponsiveContainer>
+                                            ) : <div className="h-full flex items-center justify-center text-gray-400">Pas de données</div>}
+                                        </CardContent>
+                                    </Card>
+
+                                    <Card className="border-none shadow-md bg-white/90 backdrop-blur">
+                                        <CardHeader><CardTitle className="text-lg">Motifs de Blocage IA</CardTitle></CardHeader>
+                                        <CardContent className="h-[300px]">
+                                            {analytics.topBlockReasons && analytics.topBlockReasons.length > 0 ? (
+                                                <ResponsiveContainer width="100%" height="100%">
+                                                    <PieChart>
+                                                        <Pie data={analytics.topBlockReasons} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={2} dataKey="value">
+                                                            {analytics.topBlockReasons.map((entry, index) => (
+                                                                <Cell key={`cell-${index}`} fill={['#ef4444', '#f97316', '#eab308', '#3b82f6'][index % 4]} />
+                                                            ))}
+                                                        </Pie>
+                                                        <RechartsTooltip />
+                                                        <Legend />
+                                                    </PieChart>
+                                                </ResponsiveContainer>
+                                            ) : <div className="h-full flex items-center justify-center text-gray-400">Pas de données</div>}
+                                        </CardContent>
+                                    </Card>
+                                </div>
+
+                                <Card className="border-none shadow-md bg-white/90 backdrop-blur">
+                                    <CardHeader><CardTitle className="text-lg text-red-600 flex items-center"><UserPlus className="w-5 h-5 mr-2"/> Utilisateurs Récidivistes (Blocages)</CardTitle></CardHeader>
+                                    <CardContent>
+                                        {analytics.topBlockedUsers && analytics.topBlockedUsers.length > 0 ? (
+                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                                {analytics.topBlockedUsers.map((user, idx) => (
+                                                    <div key={idx} className="flex justify-between items-center p-3 border rounded-lg bg-red-50/30">
+                                                        <span className="font-medium text-sm">{user.name}</span>
+                                                        <Badge variant="destructive">{user.blocks} blocages</Badge>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : <div className="text-gray-400 italic">Aucun blocage recensé.</div>}
+                                    </CardContent>
+                                </Card>
+                            </>
+                        ) : (
+                            <div className="flex justify-center py-20"><Activity className="animate-spin text-blue-500 w-8 h-8"/></div>
+                        )}
                     </TabsContent>
 
                     <TabsContent value="admins">

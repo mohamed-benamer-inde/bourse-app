@@ -282,4 +282,96 @@ router.delete('/users/:id', auth, adminAuth, async (req, res) => {
     }
 });
 
+// --- ANALYTICS ---
+router.get('/analytics', auth, adminAuth, async (req, res) => {
+    try {
+        const Request = require('../models/Request');
+        const AIFeedback = require('../models/AIFeedback');
+
+        // 1. L'Engagement des Donateurs (Taux de conversion)
+        const totalValidatedDonors = await User.countDocuments({ role: 'donor', isValidated: true });
+        // Distinct donors who have picked a request
+        const activeDonorsArr = await Request.distinct('donor', { donor: { $ne: null } });
+        const activeDonors = activeDonorsArr.length;
+        const donorEngagementRate = totalValidatedDonors > 0 ? ((activeDonors / totalValidatedDonors) * 100).toFixed(1) : 0;
+
+        // 2. Délai Moyen de Financement
+        const paidRequests = await Request.find({ status: { $in: ['PAID', 'CONFIRMED'] } });
+        let avgFundingTimeDays = 0;
+        if (paidRequests.length > 0) {
+            let totalTimeMs = 0;
+            paidRequests.forEach(req => {
+                // Approximate time: find the action that set status to PAID
+                const paidAction = req.history.find(h => h.action.includes('-> PAID') || h.action.includes('-> CONFIRMED'));
+                const endDate = paidAction ? new Date(paidAction.date) : new Date(req.updatedAt);
+                const startDate = new Date(req.createdAt);
+                totalTimeMs += (endDate - startDate);
+            });
+            avgFundingTimeDays = (totalTimeMs / paidRequests.length) / (1000 * 60 * 60 * 24);
+        }
+
+        // 3. Top des Besoins Financiers
+        const allRequests = await Request.find({ status: { $ne: 'DRAFT' } });
+        const needsMap = {};
+        allRequests.forEach(req => {
+            req.needs.forEach(need => {
+                const cat = need.category || 'Autre';
+                needsMap[cat] = (needsMap[cat] || 0) + 1;
+            });
+        });
+        const topNeeds = Object.keys(needsMap).map(k => ({ name: k, value: needsMap[k] })).sort((a, b) => b.value - a.value);
+
+        // 4. Précision de l'IA
+        const allFeedbacks = await AIFeedback.find().populate('userId', 'name role');
+        const totalResolved = allFeedbacks.filter(f => f.status !== 'pending').length;
+        const totalIgnored = allFeedbacks.filter(f => f.status === 'ignored').length; // IA avait raison
+        const aiAccuracyRate = totalResolved > 0 ? ((totalIgnored / totalResolved) * 100).toFixed(1) : 100;
+
+        // 5. Motifs de blocage (approximation via mots-clés ou direct aiReason si court)
+        const blockReasonsMap = {};
+        allFeedbacks.forEach(f => {
+            // Simplify reason to a keyword or keep it if short enough
+            let reason = f.aiReason;
+            if (reason.length > 30) {
+                if (reason.toLowerCase().includes('téléphone') || reason.toLowerCase().includes('numéro')) reason = 'Partage de Téléphone';
+                else if (reason.toLowerCase().includes('bancaire') || reason.toLowerCase().includes('rib')) reason = 'Données Bancaires';
+                else if (reason.toLowerCase().includes('mail') || reason.toLowerCase().includes('contact')) reason = 'Partage Email';
+                else reason = 'Autre (Non respect charte)';
+            }
+            blockReasonsMap[reason] = (blockReasonsMap[reason] || 0) + 1;
+        });
+        const topBlockReasons = Object.keys(blockReasonsMap).map(k => ({ name: k, value: blockReasonsMap[k] }));
+
+        // 6. Blocages par Utilisateur (Récidivistes)
+        const userBlocksMap = {};
+        allFeedbacks.forEach(f => {
+            if (f.userId) {
+                const key = `${f.userId.name} (${f.userId.role === 'student' ? 'Étudiant' : 'Donateur'})`;
+                userBlocksMap[key] = (userBlocksMap[key] || 0) + 1;
+            }
+        });
+        const topBlockedUsers = Object.keys(userBlocksMap)
+            .map(k => ({ name: k, blocks: userBlocksMap[k] }))
+            .sort((a, b) => b.blocks - a.blocks)
+            .slice(0, 10); // Top 10
+
+        res.json({
+            donorEngagementRate,
+            activeDonors,
+            totalValidatedDonors,
+            avgFundingTimeDays: avgFundingTimeDays.toFixed(1),
+            topNeeds,
+            aiAccuracyRate,
+            totalAIReports: allFeedbacks.length,
+            totalResolvedReports: totalResolved,
+            topBlockReasons,
+            topBlockedUsers
+        });
+
+    } catch (err) {
+        console.error("Analytics Error:", err.message);
+        res.status(500).send('Erreur serveur analytiques');
+    }
+});
+
 module.exports = router;
